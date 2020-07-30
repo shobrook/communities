@@ -56,7 +56,8 @@ def get_modularity(G):
 ######
 
 
-def girvan_newman(adj_matrix):
+def girvan_newman(adj_matrix, size=None):
+    # TODO: Handle size != None
     G = nx.from_numpy_matrix(np.array(adj_matrix))
     G.remove_edges_from(nx.selfloop_edges(G))
 
