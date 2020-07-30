@@ -17,7 +17,7 @@ setup(
     description="Library of algorithms for detecting communities in graphs",
     long_description=readme,
     long_description_content_type="text/markdown",
-    version="v2.0.0",
+    version="v2.1.0",
     packages=["communities", "communities.algorithms"],
     python_requires=">=3",
     url="https://github.com/shobrook/communities",
