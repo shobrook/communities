@@ -36,7 +36,7 @@ The output of each algorithm is a list of communities, where each community is a
 
 Pure Python implementation of the [Louvain method](https://en.wikipedia.org/wiki/Louvain_modularity). This algorithm does a greedy search for the community split that maximizes the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges. According to Wikipedia, modularity is defined as:
 
-<p width="37%"><img src="modularity_equation.png" /></p>
+<p align="center"><img src="modularity_equation.png" width="47%" /></p>
 
 where
 * _A<sub>ij</sub>_ represents the edge weight between nodes _i_ and _j_
