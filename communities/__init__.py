@@ -1,1 +1,1 @@
-from .algorithms import louvain_modularity, girvan_newman
+from .algorithms import louvain_method, girvan_newman

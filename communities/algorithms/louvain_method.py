@@ -174,7 +174,7 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
 ######
 
 
-def louvain_modularity(adj_matrix, size=None):
+def louvain_method(adj_matrix, size=None):
     optimal_adj_matrix = adj_matrix
     node_to_comm = initialize_communities(adj_matrix)
     true_partition = [[i] for i in range(len(adj_matrix))]
