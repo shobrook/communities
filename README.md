@@ -115,4 +115,3 @@ If your adjacency matrix is left-triangular, this function will turn it into a s
 This function converts a weighted graph into an unweighted graph by removing edges with weights below a given threshold.
 
 #### `create_intercommunity_graph(adj_matrix : list, communities : list, aggr : Callable = sum) -> list`
-
