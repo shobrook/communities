@@ -76,7 +76,7 @@ communities = louvain_method(adj_matrix)
 
 Implementation of the [Girvan-Newman algorithm](https://en.wikipedia.org/wiki/Girvan%E2%80%93Newman_algorithm) using NetworkX. This algorithm iteratively removes edges to create more connected components. Each component is a community, and the algorithm stops removing edges when no more gains in modularity can be made. Which edges to remove is decided by calculating their betweenness centralities, defined as:
 
-<p align="left"><img src="edge_betweenness_centrality.png" width="33%" /></p>
+<p align="left"><img src="edge_betweenness_centrality.png" width="25%" /></p>
 
 where
 * _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
