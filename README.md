@@ -1,12 +1,13 @@
 # communities
 
-`communities` is a small library of community detection algorithms for graphs. It provides some utilities for working with graphs and the following algorithms:
+`communities` is a simple library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It comes with the following algorithms:
 
-1. Louvain method
-2. Girvan-Newman algorithm
-3. Single-linkage clustering (TODO)
-4. Karger's algorithm (TODO)
-5. Bron-Kerbosch algorithm (TODO)
+- Louvain method
+- Girvan-Newman algorithm
+- Hierarchical clustering
+- Spectral clustering (TODO)
+- Karger's algorithm (TODO)
+- Bron-Kerbosch algorithm (TODO)
 
 ## Installation
 
@@ -19,6 +20,8 @@ $ pip install communities
 ## Getting Started
 
 Each algorithm expects an adjacency matrix representing an undirected graph. This matrix can either be left-triangular or symmetric. To get started, just import the algorithm you want to use from `communities.algorithms`, like so:
+
+TODO: Add picture of graph
 
 ```python
 from communities.algorithms import louvain_method
@@ -48,20 +51,21 @@ Pure Python implementation of the [Louvain method](https://en.wikipedia.org/wiki
 <p align="left"><img src="modularity.png" width="33%" /></p>
 
 where
-* _A<sub>ij</sub>_ represents the edge weight between nodes _i_ and _j_
-* _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
-* _m_ is the sum of all of the edge weights in the graph
-* _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
-* _δ_ is the Kronecker delta function (_δ(x, y) = 1_ if _x = y_, _0_ otherwise)
 
-Louvain's method runs in _O(nᆞlog<sup>2</sub>n)_ time, where _n_ is the number of nodes in the graph.
+- _A<sub>ij</sub>_ represents the edge weight between nodes _i_ and _j_
+- _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
+- _m_ is the sum of all of the edge weights in the graph
+- _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
+- _δ_ is the Kronecker delta function (_δ(x, y) = 1_ if _x = y_, _0_ otherwise)
+
+Louvain's method runs in _O(nᆞlog<sup>2</sup>n)_ time, where _n_ is the number of nodes in the graph.
 
 (Source: Wikipedia)
 
 **Parameters:**
 
-* `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
-* `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
+- `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
+- `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
 
 **Example Usage:**
 
@@ -79,8 +83,9 @@ Implementation of the [Girvan-Newman algorithm](https://en.wikipedia.org/wiki/Gi
 <p align="left"><img src="edge_betweenness_centrality.png" width="20%" /></p>
 
 where
-* _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
-* _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_
+
+- _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
+- _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_
 
 (Source: Wikipedia)
 
@@ -88,8 +93,8 @@ where
 
 **Parameters:**
 
-* `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
-* `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
+- `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
+- `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
 
 **Example Usage:**
 
