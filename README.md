@@ -1,6 +1,6 @@
 # communities
 
-`communities` is a simple library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It comes with the following algorithms:
+`communities` is a library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It features the following algorithms:
 
 - Louvain method
 - Girvan-Newman algorithm
@@ -19,23 +19,22 @@ $ pip install communities
 
 ## Getting Started
 
-Each algorithm expects an adjacency matrix representing an undirected graph. This matrix can either be left-triangular or symmetric. To get started, just import the algorithm you want to use from `communities.algorithms`, like so:
+Each algorithm expects an adjacency matrix representing an undirected graph. This matrix should be a 2D `numpy` array. Once you have this, just import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
 
 TODO: Add picture of graph
 
 ```python
+import numpy as np
 from communities.algorithms import louvain_method
 
-adj_matrix = [
-    [0.0],
-    [1.0, 0.0],
-    [1.0, 1.0, 0.0],
-    [0.0, 0.0, 1.0, 0.0],
-    [0.0, 0.0, 0.0, 1.0, 0.0],
-    [0.0, 0.0, 0.0, 1.0, 1.0, 0.0]
-]
+adj_matrix = np.array([[0, 1, 1, 0, 0, 0],
+                       [1, 0, 1, 0, 0, 0],
+                       [1, 1, 0, 1, 0, 0],
+                       [0, 0, 1, 0, 1, 1],
+                       [0, 0, 0, 1, 0, 1],
+                       [0, 0, 0, 1, 1, 0]])
 communities = louvain_method(adj_matrix)
-# >>> [[0, 1, 2], [3, 4, 5]]
+# >>> [{0, 1, 2}, {3, 4, 5}]
 ```
 
 The output of each algorithm is a list of communities, where each community is a set of nodes.
@@ -52,15 +51,13 @@ Pure Python implementation of the [Louvain method](https://en.wikipedia.org/wiki
 
 where
 
-- _A<sub>ij</sub>_ represents the edge weight between nodes _i_ and _j_
+- _A<sub>ij</sub>_ is the edge weight between nodes _i_ and _j_
 - _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
 - _m_ is the sum of all of the edge weights in the graph
 - _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
 - _δ_ is the Kronecker delta function (_δ(x, y) = 1_ if _x = y_, _0_ otherwise)
 
 Louvain's method runs in _O(nᆞlog<sup>2</sup>n)_ time, where _n_ is the number of nodes in the graph.
-
-(Source: Wikipedia)
 
 **Parameters:**
 
@@ -87,8 +84,6 @@ where
 - _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
 - _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_
 
-(Source: Wikipedia)
-
 > Note: If your graph is weighted, then the weights need to be transformed into distances, since that's how they'll be interpreted when searching for shortest paths. One way to do this is to simply take the inverse of each weight.
 
 **Parameters:**
@@ -105,18 +100,18 @@ adj_matrix = [...]
 communities = girvan_newman(adj_matrix)
 ```
 
+#### `hierarchical_clustering(adj_matrix : list, metric : str = "cosine", linkage : str = "single", size : int = None) -> list`
+
+Bottom-up (agglomerative) clustering. Each node starts in its own community, and pairs of communities are merged as one moves up the hierarchy. Use row in adjacency matrix as vector. Euclidean distance and Cosine similarity. 
+
 ### communities.utilities
 
-#### `is_left_triangular(adj_matrix : list) -> bool`
+#### `intercommunity_graph(adj_matrix : numpy.ndarray, communities : list, linkage : Callable = sum) -> list`
 
-This checks if your adjacency matrix is left-triangular.
+#### `modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
 
-#### `symmetrize_matrix(adj_matrix : list) -> list`
+#### `modularity(mod_matrix : numpy.ndarray, communities : list)
 
-If your adjacency matrix is left-triangular, this function will turn it into a symmetric matix.
-
-#### `binarize_matrix(adj_matrix : list, threshold : float = 0.0) -> list`
+#### `binarize_matrix(adj_matrix : numpy.ndarray, threshold : float = 0.0) -> list`
 
 This function converts a weighted graph into an unweighted graph by removing edges with weights below a given threshold.
-
-#### `create_intercommunity_graph(adj_matrix : list, communities : list, aggr : Callable = sum) -> list`
