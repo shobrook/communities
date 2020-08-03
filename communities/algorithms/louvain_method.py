@@ -43,6 +43,7 @@ def compute_k_in(node, nodes_in_C, adj_matrix):
     return k_i_in
 
 
+# TODO: Create modularity matrix and do matrix multiplication
 def create_Q_computer(adj_matrix):
     m = compute_sigma_in(range(len(adj_matrix)), adj_matrix)
 
