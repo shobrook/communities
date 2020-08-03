@@ -15,20 +15,30 @@ from ..utilities import modularity_matrix, modularity
 ##############
 
 
-def dot_product(x, y):
-    return sum(x_i * y_i for x_i, y_i in zip(x, y))
+# def dot_product(x, y):
+#     return sum(x_i * y_i for x_i, y_i in zip(x, y))
+#
+#
+# def norm(x):
+#     return sqrt(sum(x_i ** 2 for x_i in x))
+#
+#
+# def cosine_sim(x, y):
+#     return dot_product(x, y) / (norm(x) * norm(y))
+#
+#
+# def euclidean_dist(x, y):
+#     return sqrt(sum((y_i - x_i) ** 2 for x_i, y_i in zip(x, y)))
 
 
-def norm(x):
-    return sqrt(sum(x_i ** 2 for x_i in x))
+def euclidean_dist(A):
+    pass # TODO
 
 
-def cosine_sim(x, y):
-    return dot_product(x, y) / (norm(x) * norm(y))
-
-
-def euclidean_dist(x, y):
-    return sqrt(sum((y_i - x_i) ** 2 for x_i, y_i in zip(x, y)))
+def cosine_sim(A):
+    d = A @ A.T
+    norm = (A * A).sum(0, keepdims=True) ** 0.5
+    return d / norm / norm.T # TODO: Set diagonal to zero
 
 
 ##############
@@ -37,22 +47,10 @@ def euclidean_dist(x, y):
 
 
 def node_similarity_matrix(adj_matrix, metric):
-    num_nodes = len(adj_matrix)
-    N = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
-    for i, src_vector in enumerate(adj_matrix):
-        for j, targ_vector in enumerate(adj_matrix):
-            if j >= i:
-                break
-
-            if metric == "cosine":
-                sim = cosine_sim(src_vector, targ_vector)
-            elif metric == "euclidean":
-                sim = euclidean_dist(src_vector, targ_vector)
-
-            N[i][j] = sim
-            N[j][i] = sim
-
-    return N
+    if metric == "cosine":
+        return cosine_sim(adj_matrix)
+    elif metric == "euclidean":
+        return euclidean_dist(adj_matrix)
 
 
 def find_best_merge(C, metric):
