@@ -2,8 +2,10 @@
 import networkx as nx
 import numpy as np
 
+# Local
+from ..utilities import modularity_matrix, modularity
 
-# TODO: Rewrite this in pure Python
+# TODO: Get rid of NetworkX as a dependency
 
 
 #########
@@ -35,20 +37,8 @@ def prune_edges(G):
                 break
 
         curr_num_comps = nx.number_connected_components(G)
-
-
-# TODO: Replace with function used in louvain.py
-def get_modularity(G):
-    B = nx.modularity_matrix(G, weight="weight")
-    comps = list(nx.connected_components(G))
-
-    m, sigma = 0.0, 0.0
-    for i, j, data in G.edges(data=True):
-        m += data["weight"]
-        if any({i, j}.issubset(comp) for comp in comps):
-            sigma += B[i, j]
     
-    return (1 / (2 * m)) * sigma
+    return G
 
 
 ######
@@ -57,18 +47,23 @@ def get_modularity(G):
 
 
 def girvan_newman(adj_matrix, size=None):
-    # TODO: Handle size != None
-    G = nx.from_numpy_matrix(np.array(adj_matrix))
+    M = modularity_matrix(adj_matrix)
+    G = nx.from_numpy_matrix(adj_matrix)
     G.remove_edges_from(nx.selfloop_edges(G))
-
-    best_Q, best_G = 0.0, G.copy()
-    while True:
-        prune_edges(G)
-        Q = get_modularity(G)
-
-        if Q >= best_Q:
-            best_Q, best_G = Q, G.copy()
-        else:
-            break
+    communities = list(nx.connected_components(G))
     
-    return list(nx.connected_components(best_G))
+    best_Q = -0.5
+    while True:
+        Q = 0.0
+        if not size:
+            Q = modularity(M, communities)
+            if Q <= best_Q:
+                break
+        elif size and len(communities) == size:
+            break
+
+        G = prune_edges(G)
+        communities = list(nx.connected_components(G))
+        best_Q = Q
+    
+    return communities
