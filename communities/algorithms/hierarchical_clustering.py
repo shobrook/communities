@@ -1,8 +1,10 @@
 # Standard Library
 from itertools import product
 from math import sqrt
-from copy import deepcopy
 from statistics import mean
+
+# Third Party
+import numpy as np
 
 # Local
 from ..utilities import modularity_matrix, modularity
@@ -15,30 +17,23 @@ from ..utilities import modularity_matrix, modularity
 ##############
 
 
-# def dot_product(x, y):
-#     return sum(x_i * y_i for x_i, y_i in zip(x, y))
-#
-#
-# def norm(x):
-#     return sqrt(sum(x_i ** 2 for x_i in x))
-#
-#
-# def cosine_sim(x, y):
-#     return dot_product(x, y) / (norm(x) * norm(y))
-#
-#
-# def euclidean_dist(x, y):
-#     return sqrt(sum((y_i - x_i) ** 2 for x_i, y_i in zip(x, y)))
-
-
 def euclidean_dist(A):
-    pass # TODO
+    p1 = np.sum(A ** 2, axis=1)[:, np.newaxis]
+    p2 = -2 * np.dot(A, A)
+    p3 = np.sum(A.T ** 2, axis=1)
+    d = 1 / np.sqrt(p1 + p2 + p3)
+    np.fill_diagonal(d, 0.0)
+
+    return d
 
 
 def cosine_sim(A):
     d = A @ A.T
     norm = (A * A).sum(0, keepdims=True) ** 0.5
-    return d / norm / norm.T # TODO: Set diagonal to zero
+    C = d / norm / norm.T
+    np.fill_diagonal(C, 0.0)
+    
+    return C
 
 
 ##############
@@ -53,46 +48,28 @@ def node_similarity_matrix(adj_matrix, metric):
         return euclidean_dist(adj_matrix)
 
 
-def find_best_merge(C, metric):
-    merge_indices = ()
-    if metric == "cosine": # [-1, 1], 1 = similar, -1 = different
-        best_sim = -1.0
-    elif metric == "euclidean": # [0, inf], 0 = similar, inf = different
-        best_sim = float("inf")
-
-    for c_i, neighbors in enumerate(C):
-        for c_j, similarity in enumerate(neighbors):
-            if c_j >= c_i:
-                break
-
-            if metric == "cosine" and similarity <= best_sim:
-                continue
-            elif metric == "euclidean" and similarity >= best_sim:
-                continue
-
-            merge_indices, best_sim = (c_i, c_j), similarity
-
+def find_best_merge(C):
+    merge_indices = np.unravel_index(C.argmax(), C.shape)
     return min(merge_indices), max(merge_indices)
 
 
-def merge_communities(communities, C, N, metric, linkage):
+def merge_communities(communities, C, N, linkage):
     # Merge the two most similar communities
-    c_i, c_j = find_best_merge(C, metric)
+    c_i, c_j = find_best_merge(C)
     communities[c_i] |= communities[c_j]
     communities.pop(c_j)
 
     # Update the community similarity matrix, C
-    C.pop(c_j)
-    for row in C:
-        row.pop(c_j)
+    C = np.delete(C, c_j, axis=0)
+    C = np.delete(C, c_j, axis=1)
 
-    for c_j in range(len(C[c_i])):
+    for c_j in range(len(C)):
         if c_j == c_i:
             continue
 
         sims = []
         for u, v in product(communities[c_i], communities[c_j]):
-            sims.append(N[u][v])
+            sims.append(N[u, v])
 
         if linkage == "single":
             similarity = min(sims)
@@ -101,8 +78,8 @@ def merge_communities(communities, C, N, metric, linkage):
         elif linkage == "mean":
             similarity = mean(sims)
 
-        C[c_i][c_j] = similarity
-        C[c_j][c_i] = similarity
+        C[c_i, c_j] = similarity
+        C[c_j, c_i] = similarity
 
     return communities, C
 
@@ -122,7 +99,7 @@ def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
     communities = [{node} for node in range(len(adj_matrix))]
     M = modularity_matrix(adj_matrix)
     N = node_similarity_matrix(adj_matrix, metric)
-    C = deepcopy(N) # Community similarity matrix
+    C = np.copy(N) # Community similarity matrix
 
     best_Q = -0.5
     while True:
@@ -134,7 +111,7 @@ def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
         elif size and len(communities) == size:
             break
 
-        communities, C = merge_communities(communities, C, N, metric, linkage)
+        communities, C = merge_communities(communities, C, N, linkage)
         best_Q = Q
 
     return communities
