@@ -1,6 +1,13 @@
 # Standard Library
-from itertools import combinations, product
+from itertools import product
 from math import sqrt
+from copy import deepcopy
+from statistics import mean
+
+# Local
+from ..utilities import modularity_matrix, modularity
+
+# TODO: Use numpy helpers when possible
 
 
 ##############
@@ -16,11 +23,11 @@ def norm(x):
     return sqrt(sum(x_i ** 2 for x_i in x))
 
 
-def compute_cosine_sim(x, y):
+def cosine_sim(x, y):
     return dot_product(x, y) / (norm(x) * norm(y))
 
 
-def compute_euclidean_dist(x, y):
+def euclidean_dist(x, y):
     return sqrt(sum((y_i - x_i) ** 2 for x_i, y_i in zip(x, y)))
 
 
@@ -29,7 +36,7 @@ def compute_euclidean_dist(x, y):
 ##############
 
 
-def create_node_similarity_matrix(adj_matrix, metric):
+def node_similarity_matrix(adj_matrix, metric):
     num_nodes = len(adj_matrix)
     N = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
     for i, src_vector in enumerate(adj_matrix):
@@ -38,9 +45,9 @@ def create_node_similarity_matrix(adj_matrix, metric):
                 break
 
             if metric == "cosine":
-                sim = compute_cosine_sim(src_vector, targ_vector)
+                sim = cosine_sim(src_vector, targ_vector)
             elif metric == "euclidean":
-                sim = compute_euclidean_dist(src_vector, targ_vector)
+                sim = euclidean_dist(src_vector, targ_vector)
 
             N[i][j] = sim
             N[j][i] = sim
@@ -60,12 +67,12 @@ def find_best_merge(C, metric):
             if c_j >= c_i:
                 break
 
-            if metric == "cosine" and sim <= best_sim:
+            if metric == "cosine" and similarity <= best_sim:
                 continue
-            elif metric == "euclidean" and sim >= best_sim:
+            elif metric == "euclidean" and similarity >= best_sim:
                 continue
 
-            merge_indices, best_sim = (c_i, c_j), sim
+            merge_indices, best_sim = (c_i, c_j), similarity
 
     return min(merge_indices), max(merge_indices)
 
@@ -90,12 +97,14 @@ def merge_communities(communities, C, N, metric, linkage):
             sims.append(N[u][v])
 
         if linkage == "single":
-            sim = min(sims)
+            similarity = min(sims)
         elif linkage == "complete":
-            sim = max(sims)
+            similarity = max(sims)
+        elif linkage == "mean":
+            similarity = mean(sims)
 
-        C[c_i][c_j] = sim
-        C[c_j][c_i] = sim
+        C[c_i][c_j] = similarity
+        C[c_j][c_i] = similarity
 
     return communities, C
 
@@ -105,22 +114,29 @@ def merge_communities(communities, C, N, metric, linkage):
 ######
 
 
-# TODO: Optimize for modularity
-def hierarchical_cluster(adj_matrix, metric="euclidean", linkage="single",
-                         size=None):
+def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
+                            size=None):
     """
     """
 
     metric, linkage = metric.lower(), linkage.lower()
 
     communities = [{node} for node in range(len(adj_matrix))]
-    N = create_node_similarity_matrix(adj_matrix, metric)
-    C = N # Community similarity matrix
+    M = modularity_matrix(adj_matrix)
+    N = node_similarity_matrix(adj_matrix, metric)
+    C = deepcopy(N) # Community similarity matrix
 
+    best_Q = -0.5
     while True:
-        if size and len(communities) == size:
+        Q = 0.0
+        if not size:
+            Q = modularity(M, communities)
+            if Q <= best_Q:
+                break
+        elif size and len(communities) == size:
             break
 
         communities, C = merge_communities(communities, C, N, metric, linkage)
+        best_Q = Q
 
     return communities
