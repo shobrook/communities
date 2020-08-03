@@ -1,32 +1,13 @@
 # Standard Library
-from itertools import product
+from itertools import product, combinations
+
+# Third Party
+import numpy as np
 
 
 ######
 # MAIN
 ######
-
-
-def is_left_triangular(adj_matrix):
-    for i, neighbors in enumerate(adj_matrix):
-        if len(neighbors) > i:
-            return False
-    
-    return True
-
-
-def symmetrize_matrix(adj_matrix):
-    if not is_left_triangular(adj_matrix):
-        return adj_matrix
-    
-    num_nodes = len(adj_matrix)
-    sym_adj_matrix = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
-    for i, neighbors in enumerate(adj_matrix):
-        for j, weight in enumerate(neighbors):
-            sym_adj_matrix[i][j] = weight
-            sym_adj_matrix[j][i] = weight
-    
-    return sym_adj_matrix
 
 
 def binarize_matrix(adj_matrix, threshold):
@@ -56,3 +37,22 @@ def create_intercommunity_graph(adj_matrix, communities, aggr=sum):
             intercomm_adj_matrix[j][i] = edge_weight
     
     return intercomm_adj_matrix
+
+
+def modularity_matrix(A):
+    k_i = np.expand_dims(A.sum(axis=1), axis=1)
+    k_j = k_i.T
+    norm = 1 / k_i.sum()
+    K = norm * np.matmul(k_i, k_j)
+
+    return norm * (A - K)
+
+
+def modularity(M, communities):
+    C = np.zeros_like(M)
+    for community in communities:
+        for i, j in combinations(community, 2):
+            C[i, j] = 1.0
+            C[j, i] = 1.0
+
+    return np.tril(np.multiply(M, C), 0).sum()
