@@ -17,21 +17,19 @@ from ..utilities import modularity_matrix, modularity
 ##############
 
 
-def euclidean_dist(A):
+def inverse_euclidean_dist(A):
     p1 = np.sum(A ** 2, axis=1)[:, np.newaxis]
     p2 = -2 * np.dot(A, A)
     p3 = np.sum(A.T ** 2, axis=1)
-    d = 1 / np.sqrt(p1 + p2 + p3)
-    np.fill_diagonal(d, 0.0)
+    E = 1 / np.sqrt(p1 + p2 + p3)
 
-    return d
+    return E
 
 
 def cosine_sim(A):
     d = A @ A.T
     norm = (A * A).sum(0, keepdims=True) ** 0.5
     C = d / norm / norm.T
-    np.fill_diagonal(C, 0.0)
     
     return C
 
@@ -41,11 +39,15 @@ def cosine_sim(A):
 ##############
 
 
+# TODO: Implement Chebyshev and Manhattan distances
 def node_similarity_matrix(adj_matrix, metric):
     if metric == "cosine":
-        return cosine_sim(adj_matrix)
+        N = cosine_sim(adj_matrix)
     elif metric == "euclidean":
-        return euclidean_dist(adj_matrix)
+        N = inverse_euclidean_dist(adj_matrix)
+    
+    np.fill_diagonal(N, 0.0)
+    return N
 
 
 def find_best_merge(C):
@@ -77,6 +79,7 @@ def merge_communities(communities, C, N, linkage):
             similarity = max(sims)
         elif linkage == "mean":
             similarity = mean(sims)
+        # TODO: Add centroid-linkage
 
         C[c_i, c_j] = similarity
         C[c_j, c_i] = similarity
@@ -90,7 +93,7 @@ def merge_communities(communities, C, N, linkage):
 
 
 def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
-                            size=None):
+                            n=None):
     """
     """
 
@@ -104,11 +107,11 @@ def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
     best_Q = -0.5
     while True:
         Q = 0.0
-        if not size:
+        if not n:
             Q = modularity(M, communities)
             if Q <= best_Q:
                 break
-        elif size and len(communities) == size:
+        elif n and len(communities) == n:
             break
 
         communities, C = merge_communities(communities, C, N, linkage)
