@@ -105,10 +105,10 @@ communities = girvan_newman(adj_matrix)
 
 Implementation of a bottom-up, hierarchical clustering algorithm. Each node starts in its own community. Then, the most similar pairs of communities are merged as the hierarchy is built up. Communities are merged until no further gains in modularity can be made.
 
-There are multiple schemes for measuring the similarity between two communities, _C<sub>1</sub>_ and _C<sub>1</sub>_:
-- **Single-linkage:** _min({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
-- **Complete-linkage:** _max({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
-- **Mean-linkage:** _mean({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
+There are multiple schemes for measuring the similarity between two communities, _C<sub>1</sub>_ and _C<sub>2</sub>_:
+- **Single-linkage:** min({sim(i, j) | i ∊ C<sub>1</sub>, j ∊ C<sub>2</sub>})
+- **Complete-linkage:** max({sim(i, j) | i ∊ C<sub>1</sub>, j ∊ C<sub>2</sub>})
+- **Mean-linkage:** mean({sim(i, j) | i ∊ C<sub>1</sub>, j ∊ C<sub>2</sub>})
 
 where _sim(i, j)_ is the similarity between nodes _i_ and _j_, defined as either the cosine similarity or inverse Euclidean distance between their row vectors in the adjacency matrix, _A<sub>i</sub>_ and _A<sub>j</sub>_.
 
