@@ -47,7 +47,7 @@ The output of each algorithm is a list of communities, where each community is a
 
 Implementation of the Louvain method, from _[Fast unfolding of communities in large networks](https://arxiv.org/pdf/0803.0476.pdf)_. This algorithm does a greedy search for the communities that maximize the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges. Formally, modularity is defined as:
 
-<p align="left"><img src="modularity.png" width="33%" /></p>
+<p align="left"><img src="modularity.png" width="275px" /></p>
 
 where
 
@@ -77,7 +77,7 @@ communities = louvain_method(adj_matrix)
 
 Implementation of the Girvan-Newman algorithm, from _[Community structure in social and biological networks](https://www.pnas.org/content/99/12/7821)_. This algorithm iteratively removes edges to create more [connected components](https://en.wikipedia.org/wiki/Component_(graph_theory)). Each component is considered a community, and the algorithm stops removing edges when no more gains in modularity can be made. Edges with the highest betweenness centralities are removed.<!-- These are the edges that lie between many pairs of nodes.--> Formally, edge betweenness centrality is defined as:
 
-<p align="left"><img src="edge_betweenness_centrality.png" width="20%" /></p>
+<p align="left"><img src="edge_betweenness_centrality.png" width="175px" /></p>
 
 where
 
