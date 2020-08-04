@@ -1,6 +1,6 @@
 # communities
 
-`communities` is a library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It comes with the following algorithms:
+`communities` is a library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It provides the following algorithms:
 
 - Louvain method
 - Girvan-Newman algorithm
