@@ -19,7 +19,7 @@ $ pip install communities
 
 ## Getting Started
 
-Each algorithm expects an adjacency matrix representing an undirected graph. This matrix should be a 2D `numpy` array. Once you have this, just import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
+Each algorithm expects an adjacency matrix representing an undirected graph. This matrix should be a 2D `numpy` array. Once you have this, just import the algorithm you want to use from `communities.algorithms` and plug in the matrix.
 
 TODO: Add picture of graph
 
@@ -43,15 +43,15 @@ The output of each algorithm is a list of communities, where each community is a
 
 ### communities.algorithms
 
-#### `louvain_method(adj_matrix : list, size : int = None) -> list`
+#### `louvain_method(adj_matrix : numpy.ndarray, n : int = None) -> list`
 
-Pure Python implementation of the [Louvain method](https://en.wikipedia.org/wiki/Louvain_modularity). This algorithm does a greedy search for the communities that maximize the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges. Formally, modularity is defined as:
+Implementation of the Louvain method, from _[Fast unfolding of communities in large networks](https://arxiv.org/pdf/0803.0476.pdf)_. This algorithm does a greedy search for the communities that maximize the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges. Formally, modularity is defined as:
 
 <p align="left"><img src="modularity.png" width="33%" /></p>
 
 where
 
-- _A<sub>ij</sub>_ is the edge weight between nodes _i_ and _j_
+- _A<sub>ij</sub>_ is the weight of the edge between nodes _i_ and _j_
 - _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
 - _m_ is the sum of all of the edge weights in the graph
 - _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
@@ -61,8 +61,8 @@ Louvain's method runs in _O(nᆞlog<sup>2</sup>n)_ time, where _n_ is the number
 
 **Parameters:**
 
-- `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
-- `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+- `n` _(int or None, optional (default=None))_: Terminates the search once this number of communities is detected; if `None`, then the algorithm will behave normally and terminate once modularity is maximized
 
 **Example Usage:**
 
@@ -73,9 +73,9 @@ adj_matrix = [...]
 communities = louvain_method(adj_matrix)
 ```
 
-#### `girvan_newman(adj_matrix : list, size : int = None) -> list`
+#### `girvan_newman(adj_matrix : numpy.ndarray, n : int = None) -> list`
 
-Implementation of the [Girvan-Newman algorithm](https://en.wikipedia.org/wiki/Girvan%E2%80%93Newman_algorithm) using NetworkX. This algorithm iteratively removes edges to create more connected components. Each component is a community, and the algorithm stops removing edges when no more gains in modularity can be made. Which edges to remove is decided by calculating their betweenness centralities, defined as:
+Implementation of the Girvan-Newman algorithm, from _[Community structure in social and biological networks](https://www.pnas.org/content/99/12/7821)_. This algorithm iteratively removes edges to create more [connected components](https://en.wikipedia.org/wiki/Component_(graph_theory)). Each component is considered a community, and the algorithm stops removing edges when no more gains in modularity can be made. Edges with the highest betweenness centralities are removed.<!-- These are the edges that lie between many pairs of nodes.--> Formally, edge betweenness centrality is defined as:
 
 <p align="left"><img src="edge_betweenness_centrality.png" width="20%" /></p>
 
@@ -84,12 +84,13 @@ where
 - _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
 - _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_
 
-> Note: If your graph is weighted, then the weights need to be transformed into distances, since that's how they'll be interpreted when searching for shortest paths. One way to do this is to simply take the inverse of each weight.
+The Girvan-Newman algorithm runs in _O(m<sup>2</sup>n)_ time, where _m_ is the number of edges in the graph and _n_ is the number of nodes.
 
 **Parameters:**
 
-- `adj_matrix` _(list)_: Adjacency matrix representation of your graph; can be either a left-triangular or symmetric matrix
-- `size` _(int or None, optional (default=None))_: Number of communities to divide the graph into; if `None`, then the algorithm will behave normally
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+    - If your graph is weighted, then the weights need to be transformed into distances, since that's how they'll be interpreted when searching for shortest paths. One way to do this is to simply take the inverse of each weight.
+- `n` _(int or None, optional (default=None))_: Terminates the search once this number of communities is detected; if `None`, then the algorithm will behave normally and terminate once modularity is maximized
 
 **Example Usage:**
 
@@ -100,9 +101,34 @@ adj_matrix = [...]
 communities = girvan_newman(adj_matrix)
 ```
 
-#### `hierarchical_clustering(adj_matrix : list, metric : str = "cosine", linkage : str = "single", size : int = None) -> list`
+#### `hierarchical_clustering(adj_matrix : numpy.ndarray, metric : str = "cosine", linkage : str = "single", n : int = None) -> list`
 
-Bottom-up (agglomerative) clustering. Each node starts in its own community, and pairs of communities are merged as one moves up the hierarchy. Use row in adjacency matrix as vector. Euclidean distance and Cosine similarity. 
+Implementation of a bottom-up, hierarchical clustering algorithm. Each node starts in its own community. Then, the most similar pairs of communities are merged as the hierarchy is built up. Communities are merged until no further gains in modularity can be made.
+
+There are multiple schemes for measuring the similarity between two communities, _C<sub>1</sub>_ and _C<sub>1</sub>_:
+- **Single-linkage:** _min({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
+- **Complete-linkage:** _max({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
+- **Mean-linkage:** _mean({sim(i, j) | i∊C<sub>1</sub>, j∊C<sub>2</sub>})_
+
+where _sim(i, j)_ is the similarity between nodes _i_ and _j_, defined as either the cosine similarity or inverse Euclidean distance between their row vectors in the adjacency matrix, _A<sub>i</sub>_ and _A<sub>j</sub>_.
+
+This algorithm runs in _O(n<sup>3</sup>)_ time, where _n_ is the number of nodes in the graph.
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+- `metric` _(str, optional (default="cosine"))_: Scheme for measuring node similarity; options are "cosine", for cosine similarity, or "euclidean", for inverse Euclidean distance
+- `linkage` _(str, optional (default="single"))_: Scheme for measuring community similarity; options are "single", "complete", and "mean"
+- `n` _(int or None, optional (default=None))_: Terminates the search once this number of communities is detected; if `None`, then the algorithm will behave normally and terminate once modularity is maximized
+
+**Example Usage:**
+
+```python
+from communities.algorithms import hierarchical_clustering
+
+adj_matrix = [...]
+communities = hierarchical_clustering(adj_matrix, metric="euclidean", linkage="complete")
+```
 
 ### communities.utilities
 
