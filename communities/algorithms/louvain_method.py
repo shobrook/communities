@@ -76,7 +76,7 @@ def initialize_communities(adj_matrix):
 ########
 
 
-def run_first_phase(node_to_comm, adj_matrix, size, force_merge=False):
+def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
     """
     For each node i, the change in modularity is computed for removing i from
     its own community and moving it into the community of each neighbor j of i.
@@ -91,7 +91,7 @@ def run_first_phase(node_to_comm, adj_matrix, size, force_merge=False):
     compute_Q = create_Q_computer(adj_matrix)
     best_node_to_comm = node_to_comm.copy()
     num_communities = len(set(best_node_to_comm))
-    is_updated = not (size and num_communities == size)
+    is_updated = not (n and num_communities == n)
 
     # QUESTION: Randomize the order of the nodes before iterating?
 
@@ -99,7 +99,7 @@ def run_first_phase(node_to_comm, adj_matrix, size, force_merge=False):
         is_updated = False
         for i, neighbors in enumerate(adj_matrix):
             num_communities = len(set(best_node_to_comm))
-            if size and num_communities == size:
+            if n and num_communities == n:
                 break
 
             best_Q, max_delta_Q = compute_Q(best_node_to_comm), 0.0
@@ -176,7 +176,7 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
 
 
 # TODO: Handle adj_matrix as numpy.ndarray
-def louvain_method(adj_matrix, size=None):
+def louvain_method(adj_matrix, n=None):
     optimal_adj_matrix = adj_matrix
     node_to_comm = initialize_communities(adj_matrix)
     true_partition = [[i] for i in range(len(adj_matrix))]
@@ -186,17 +186,17 @@ def louvain_method(adj_matrix, size=None):
         optimal_node_to_comm = run_first_phase(
             node_to_comm,
             optimal_adj_matrix,
-            size
+            n
         )
 
         if optimal_node_to_comm == node_to_comm:
-            if not size:
+            if not n:
                 break
 
             optimal_node_to_comm = run_first_phase(
                 node_to_comm,
                 optimal_adj_matrix,
-                size,
+                n,
                 force_merge=True
             )
 
@@ -206,7 +206,7 @@ def louvain_method(adj_matrix, size=None):
             true_partition
         )
 
-        if size and len(true_partition) == size:
+        if n and len(true_partition) == n:
             break
 
         node_to_comm = initialize_communities(optimal_adj_matrix)
