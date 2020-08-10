@@ -77,11 +77,11 @@ def update_assignments(V, C, communities):
 ######
 
 
-def spectral_clustering(adj_matrix, n):
+def spectral_clustering(adj_matrix, k):
     L = laplacian_matrix(adj_matrix)
-    V = eigenvector_matrix(L, n)
+    V = eigenvector_matrix(L, k)
 
-    communities = init_communities(len(adj_matrix), n)
+    communities = init_communities(len(adj_matrix), k)
     while True:
         C = calc_centroids(V, communities)
         new_communities = update_assignments(V, C, deepcopy(communities))

@@ -135,23 +135,21 @@ adj_matrix = [...]
 communities = hierarchical_clustering(adj_matrix, metric="euclidean", linkage="complete")
 ```
 
-#### `spectral_clustering(adj_matrix : numpy.ndarray, n : int) -> list`
+#### `spectral_clustering(adj_matrix : numpy.ndarray, k : int) -> list`
 
-Implementation of a spectral clustering algorithm. This type of algorithm assumes the eigenvalues of the adjacency matrix hold information about community structure.
-
-the following steps:
+Implementation of a spectral clustering algorithm. This type of algorithm assumes the eigenvalues of the adjacency matrix hold information about community structure. Here's how it works:
 
 1. Compute the Laplacian matrix, _L = D - A_, where _A_ is the adjacency matrix and _D_ is the diagonal matrix
-2. Compute the _n_ smallest eigenvectors of _L_
+2. Compute the _k_ smallest eigenvectors of _L_, skipping the first eigenvector
 3. Create a matrix _V_ containing eigenvectors _v<sub>1</sub>_, _v<sub>2</sub>_, ... _v<sub>n</sub>_ as columns
-4. Cluster the rows in _V_ using k-means into _n_ communities
+4. Cluster the rows in _V_ using k-means into _k_ communities
 
 This algorithm is NP-hard.
 
 **Parameters:**
 
 - `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
-- `n` _(int)_: Number of communities to cluster nodes into
+- `k` _(int)_: Number of communities to cluster nodes into
 
 **Example Usage:**
 
@@ -164,7 +162,7 @@ communities = spectral_clustering(adj_matrix, n=5)
 
 ### communities.utilities
 
-#### `intercommunity_graph(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`
+#### `intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`
 
 #### `laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
 

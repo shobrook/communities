@@ -20,22 +20,22 @@ def binarize_matrix(adj_matrix, threshold):
     return bin_adj_matrix
 
 
-def create_intercommunity_graph(adj_matrix, communities, aggr=sum):
+def intercommunity_matrix(adj_matrix, communities, aggr=sum):
     num_nodes = len(communities)
     intercomm_adj_matrix = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
     for i, src_comm in enumerate(communities):
         for j, targ_comm in enumerate(communities):
             if j > i:
                 break
-            
+
             edge_weights = []
             for u, v in product(src_comm, targ_comm):
                 edge_weights.append(adj_matrix[u][v])
-            
+
             edge_weight = aggr(edge_weights)
             intercomm_adj_matrix[i][j] = edge_weight
             intercomm_adj_matrix[j][i] = edge_weight
-    
+
     return intercomm_adj_matrix
 
 
