@@ -21,7 +21,7 @@ $ pip install communities
 
 Each algorithm expects an adjacency matrix representing an undirected graph –– weighted or unweighted. This matrix should be a 2D `numpy` array. Once you have this, just import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
 
-TODO: Add picture of graph
+<!--TODO: Add picture of graph-->
 
 ```python
 import numpy as np
@@ -168,14 +168,18 @@ communities = spectral_clustering(adj_matrix, n=5)
 
 ## Utilities
 
-#### `intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`
+### intercommunity_matrix
 
-#### `laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
+**`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`**
 
-#### `modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
+### laplacian_matrix
 
-#### `modularity(mod_matrix : numpy.ndarray, communities : list) -> float`
+**`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
-#### `binarize_matrix(adj_matrix : numpy.ndarray, threshold : float = 0.0) -> list`
+### modularity_matrix
 
-This function converts a weighted graph into an unweighted graph by removing edges with weights below a given threshold.
+**`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
+
+### modularity
+
+**`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`**
