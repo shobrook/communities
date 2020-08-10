@@ -39,11 +39,11 @@ communities = louvain_method(adj_matrix)
 
 The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix.
 
-## API
+## Algorithms
 
-### communities.algorithms
+### Louvain's Method
 
-#### `louvain_method(adj_matrix : numpy.ndarray, n : int = None) -> list`
+**`louvain_method(adj_matrix : numpy.ndarray, n : int = None) -> list`**
 
 Implementation of the Louvain method, from _[Fast unfolding of communities in large networks](https://arxiv.org/pdf/0803.0476.pdf)_. This algorithm does a greedy search for the communities that maximize the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges.
 
@@ -75,7 +75,9 @@ adj_matrix = [...]
 communities = louvain_method(adj_matrix)
 ```
 
-#### `girvan_newman(adj_matrix : numpy.ndarray, n : int = None) -> list`
+### Girvan-Newman algorithm
+
+**`girvan_newman(adj_matrix : numpy.ndarray, n : int = None) -> list`**
 
 Implementation of the Girvan-Newman algorithm, from _[Community structure in social and biological networks](https://www.pnas.org/content/99/12/7821)_. This algorithm iteratively removes edges to create more [connected components](<https://en.wikipedia.org/wiki/Component_(graph_theory)>). Each component is considered a community, and the algorithm stops removing edges when no more gains in modularity can be made. Edges with the highest betweenness centralities are removed. Betweenness centrality is a measure of how many shortest paths between a pair of nodes runs through an edge. Edges with high betweenness centrality are those that lie between many pairs of nodes.
 
@@ -105,7 +107,9 @@ adj_matrix = [...]
 communities = girvan_newman(adj_matrix)
 ```
 
-#### `hierarchical_clustering(adj_matrix : numpy.ndarray, metric : str = "cosine", linkage : str = "single", n : int = None) -> list`
+### Hierarchical clustering
+
+**`hierarchical_clustering(adj_matrix : numpy.ndarray, metric : str = "cosine", linkage : str = "single", n : int = None) -> list`**
 
 Implementation of a bottom-up, hierarchical clustering algorithm. Each node starts in its own community. Then, the most similar pairs of communities are merged as the hierarchy is built up. Communities are merged until no further gains in modularity can be made.
 
@@ -135,7 +139,9 @@ adj_matrix = [...]
 communities = hierarchical_clustering(adj_matrix, metric="euclidean", linkage="complete")
 ```
 
-#### `spectral_clustering(adj_matrix : numpy.ndarray, k : int) -> list`
+### Spectral clustering
+
+**`spectral_clustering(adj_matrix : numpy.ndarray, k : int) -> list`**
 
 Implementation of a spectral clustering algorithm. This type of algorithm assumes the eigenvalues of the adjacency matrix hold information about community structure. Here's how it works:
 
@@ -160,7 +166,7 @@ adj_matrix = [...]
 communities = spectral_clustering(adj_matrix, n=5)
 ```
 
-### communities.utilities
+## Utilities
 
 #### `intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`
 
