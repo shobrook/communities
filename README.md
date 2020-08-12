@@ -185,7 +185,7 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 
 ### Inter-community adjacency matrix
 
-`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> numpy.ndarray`
+**`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> numpy.ndarray`**
 
 Creates an inter-community adjacency matrix. Each node in this matrix represents a community in `communities`, and each edge between nodes _i_ and _j_ is created by aggregating (e.g. summing) the weights of edges between nodes in `communities[i]` and nodes in `communities[j]`.
 
@@ -209,7 +209,7 @@ intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
 
 ### Graph Laplacian
 
-`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
+**`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
 Computes the [graph Laplacian](https://en.wikipedia.org/wiki/Laplacian_matrix). This matrix is used in the `spectral_clustering` algorithm, and is generally useful for revealing properties of a graph. It is defined as _L = D - A_, where _A_ is the adjacency matrix of the graph, and _D_ is the degree matrix, defined as:
 
@@ -232,13 +232,13 @@ L = laplacian_matrix(adj_matrix)
 
 ### Modularity matrix
 
-`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`
+**`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
 TODO
 
 ### Modularity
 
-`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`
+**`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`**
 
 Computes modularity of a partitioned graph. Modularity is defined as:
 
