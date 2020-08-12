@@ -12,7 +12,7 @@ import numpy as np
 
 def intercommunity_matrix(adj_matrix, communities, aggr=sum):
     num_nodes = len(communities)
-    intercomm_adj_matrix = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
+    intercomm_adj_matrix = np.zeros((num_nodes, num_nodes))
     for i, src_comm in enumerate(communities):
         for j, targ_comm in enumerate(communities):
             if j > i:
@@ -20,11 +20,11 @@ def intercommunity_matrix(adj_matrix, communities, aggr=sum):
 
             edge_weights = []
             for u, v in product(src_comm, targ_comm):
-                edge_weights.append(adj_matrix[u][v])
+                edge_weights.append(adj_matrix[u, v])
 
             edge_weight = aggr(edge_weights)
-            intercomm_adj_matrix[i][j] = edge_weight
-            intercomm_adj_matrix[j][i] = edge_weight
+            intercomm_adj_matrix[i, j] = edge_weight
+            intercomm_adj_matrix[j, i] = edge_weight
 
     return intercomm_adj_matrix
 
@@ -37,20 +37,20 @@ def laplacian_matrix(adj_matrix):
     return L
 
 
-def modularity_matrix(A):
-    k_i = np.expand_dims(A.sum(axis=1), axis=1)
+def modularity_matrix(adj_matrix):
+    k_i = np.expand_dims(adj_matrix.sum(axis=1), axis=1)
     k_j = k_i.T
     norm = 1 / k_i.sum()
     K = norm * np.matmul(k_i, k_j)
 
-    return norm * (A - K)
+    return norm * (adj_matrix - K)
 
 
-def modularity(M, communities):
-    C = np.zeros_like(M)
+def modularity(mod_matrix, communities):
+    C = np.zeros_like(mod_matrix)
     for community in communities:
         for i, j in combinations(community, 2):
             C[i, j] = 1.0
             C[j, i] = 1.0
 
-    return np.tril(np.multiply(M, C), 0).sum()
+    return np.tril(np.multiply(mod_matrix, C), 0).sum()
