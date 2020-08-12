@@ -46,12 +46,12 @@ def prune_edges(G):
 ######
 
 
-def girvan_newman(adj_matrix, n=None):
+def girvan_newman(adj_matrix : np.ndarray, n : int = None) -> list:
     M = modularity_matrix(adj_matrix)
     G = nx.from_numpy_matrix(adj_matrix)
     G.remove_edges_from(nx.selfloop_edges(G))
     communities = list(nx.connected_components(G))
-    
+
     best_Q = -0.5
     while True:
         Q = 0.0

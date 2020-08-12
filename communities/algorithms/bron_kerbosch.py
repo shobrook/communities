@@ -1,9 +1,13 @@
+# Third Party
+import numpy as np
+
+
 ######
 # MAIN
 ######
 
 
-def bron_kerbosch(adj_matrix, pivot=False):
+def bron_kerbosch(adj_matrix : np.ndarray, pivot : bool = False) -> list:
     maximal_cliques = []
 
     def N(v):

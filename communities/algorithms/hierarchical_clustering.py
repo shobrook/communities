@@ -92,8 +92,8 @@ def merge_communities(communities, C, N, linkage):
 ######
 
 
-def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
-                            n=None):
+def hierarchical_clustering(adj_matrix : np.ndarray, metric : str = "cosine",
+                            linkage : str = "single", n : int = None) -> list:
     metric, linkage = metric.lower(), linkage.lower()
 
     communities = [{node} for node in range(len(adj_matrix))]

@@ -5,6 +5,9 @@ from copy import deepcopy
 # Third Party
 import numpy as np
 
+# Local
+from ..utilities import laplacian_matrix
+
 
 ##############
 # MATH HELPERS
@@ -69,18 +72,18 @@ def update_assignments(V, C, communities):
 ######
 
 
-def spectral_clustering(adj_matrix, k):
+def spectral_clustering(adj_matrix : np.ndarray, k : int) -> list:
     L = laplacian_matrix(adj_matrix)
     V = eigenvector_matrix(L, k)
 
     communities = init_communities(len(adj_matrix), k)
     while True:
         C = calc_centroids(V, communities)
-        new_communities = update_assignments(V, C, deepcopy(communities))
+        updated_communities = update_assignments(V, C, deepcopy(communities))
 
-        if new_communities == communities:
+        if updated_communities == communities:
             break
 
-        communities = new_communities
+        communities = updated_communities
 
     return communities
