@@ -2,73 +2,32 @@
 from itertools import combinations, chain
 from collections import defaultdict
 
+# Third Party
+import numpy as np
+
+# Local
+from ..utilities import modularity_matrix, modularity
+
 
 #########
 # HELPERS
 #########
 
 
+def initialize_node_to_comm(adj_matrix):
+    return list(range(len(adj_matrix)))
+
+
+def invert_node_to_comm(node_to_comm):
+    communities = defaultdict(set)
+    for node, community in enumerate(node_to_comm):
+        communities[community].add(node)
+
+    return list(communities.values())
+
+
 def get_all_edges(nodes):
     return chain(combinations(nodes, 2), ((u, u) for u in nodes))
-
-
-def compute_sigma_in(nodes_in_C, adj_matrix):
-    # Sum of the edge weights of the links inside community C
-    return sum(adj_matrix[u][v] for u, v in get_all_edges(nodes_in_C))
-
-
-def compute_sigma_tot(nodes_in_C, adj_matrix):
-    # Sum of all the weights of the links *to* nodes in a community
-    sigma_tot = 0.0
-    for node in nodes_in_C:
-        for neighbor, edge_weight in enumerate(adj_matrix[node]):
-            if not neighbor in nodes_in_C:
-                sigma_tot += edge_weight
-
-    return sigma_tot
-
-
-def compute_k(node, adj_matrix):
-    # Weighted degree of node
-    return sum(adj_matrix[node])
-
-
-def compute_k_in(node, nodes_in_C, adj_matrix):
-    # Sum of the weights of the links between a node and all other nodes in a
-    # community
-    k_i_in = 0.0
-    for neighbor in nodes_in_C:
-        k_i_in += adj_matrix[node][neighbor]
-
-    return k_i_in
-
-
-# TODO: Create modularity matrix and do matrix multiplication
-def create_Q_computer(adj_matrix):
-    m = compute_sigma_in(range(len(adj_matrix)), adj_matrix)
-
-    summation_terms = []
-    for i, j in get_all_edges(range(len(adj_matrix))):
-        A_ij = adj_matrix[i][j]
-        k_i = compute_k(i, adj_matrix)
-        k_j = compute_k(j, adj_matrix)
-
-        term = A_ij - ((k_i * k_j) / (2 * m))
-        summation_terms.append((i, j, term))
-
-    def compute_Q(node_to_comm):
-        Q = 0.0
-        for i, j, term in summation_terms:
-            delta_ij = int(node_to_comm[i] == node_to_comm[j])
-            Q += term * delta_ij
-
-        return Q * (1 / (2 * m))
-
-    return compute_Q
-
-
-def initialize_communities(adj_matrix):
-    return list(range(len(adj_matrix)))
 
 
 ########
@@ -77,7 +36,7 @@ def initialize_communities(adj_matrix):
 
 
 def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
-    compute_Q = create_Q_computer(adj_matrix)
+    M = modularity_matrix(adj_matrix)
     best_node_to_comm = node_to_comm.copy()
     num_communities = len(set(best_node_to_comm))
     is_updated = not (n and num_communities == n)
@@ -91,7 +50,8 @@ def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
             if n and num_communities == n:
                 break
 
-            best_Q, max_delta_Q = compute_Q(best_node_to_comm), 0.0
+            best_Q = modularity(M, invert_node_to_comm(best_node_to_comm))
+            max_delta_Q = 0.0
             updated_node_to_comm, visited_communities = best_node_to_comm, set()
             for j, weight in enumerate(neighbors):
                 # Skip if self-loop or not neighbor
@@ -107,7 +67,10 @@ def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
                 candidate_node_to_comm = best_node_to_comm.copy()
                 candidate_node_to_comm[i] = neighbor_comm
 
-                candidate_Q = compute_Q(candidate_node_to_comm)
+                candidate_Q = modularity(
+                    M,
+                    invert_node_to_comm(candidate_node_to_comm)
+                )
                 delta_Q = candidate_Q - best_Q
                 if delta_Q > max_delta_Q or (force_merge and not max_delta_Q):
                     updated_node_to_comm = candidate_node_to_comm
@@ -130,7 +93,7 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
 
     new_adj_matrix, new_true_partition = [], []
     for i, cluster in enumerate(node_clusters):
-        true_cluster = [v for u in cluster for v in true_partition[u]]
+        true_cluster = {v for u in cluster for v in true_partition[u]}
         row_vec = []
         for j, neighbor_cluster in enumerate(node_clusters):
             if i == j:  # Sum all intra-community weights and add as self-loop
@@ -147,7 +110,8 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
         new_true_partition.append(true_cluster)
         new_adj_matrix.append(row_vec)
 
-    return new_adj_matrix, new_true_partition
+    # TODO: Use numpy more efficiently
+    return np.array(new_adj_matrix), new_true_partition
 
 
 ######
@@ -155,11 +119,10 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
 ######
 
 
-# TODO: Handle adj_matrix as numpy.ndarray
 def louvain_method(adj_matrix, n=None):
     optimal_adj_matrix = adj_matrix
-    node_to_comm = initialize_communities(adj_matrix)
-    true_partition = [[i] for i in range(len(adj_matrix))]
+    node_to_comm = initialize_node_to_comm(adj_matrix)
+    true_partition = [{i} for i in range(len(adj_matrix))]
 
     is_optimal = False
     while not is_optimal:
@@ -189,6 +152,6 @@ def louvain_method(adj_matrix, n=None):
         if n and len(true_partition) == n:
             break
 
-        node_to_comm = initialize_communities(optimal_adj_matrix)
+        node_to_comm = initialize_node_to_comm(optimal_adj_matrix)
 
     return true_partition
