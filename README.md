@@ -19,7 +19,7 @@ $ pip install communities
 
 ## Getting Started
 
-Each algorithm expects an adjacency matrix representing an undirected graph –– weighted or unweighted. This matrix should be a 2D `numpy` array. Once you have this, just import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
+Each algorithm expects an adjacency matrix representing an undirected graph, which can be weighted or unweighted. This matrix should be a 2D `numpy` array. Once you have this, simply import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
 
 <!--TODO: Add picture of graph-->
 
@@ -49,7 +49,7 @@ Implementation of the Louvain method, from _[Fast unfolding of communities in la
 
 <!--Formally, modularity is defined as:
 
-<p align="left"><img src="modularity.png" width="275px" /></p>
+<p align="left"><img src="img/modularity.png" width="275px" /></p>
 
 where
 
@@ -83,7 +83,7 @@ Implementation of the Girvan-Newman algorithm, from _[Community structure in soc
 
 <!--Formally, edge betweenness centrality is defined as:
 
-<p align="left"><img src="edge_betweenness_centrality.png" width="175px" /></p>
+<p align="left"><img src="img/edge_betweenness_centrality.png" width="175px" /></p>
 
 where
 
@@ -197,7 +197,26 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 
 ### intercommunity_matrix
 
-**`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> list`**
+**`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> numpy.ndarray`**
+
+Create an inter-community adjacency matrix. Each node in this matrix represents a community in `communities`, and each edge between nodes _i_ and _j_ is created by aggregating (e.g. summing) the weights of edges between nodes in `communities[i]` and nodes in `communities[j]`.
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of the graph from which communities were extracted
+- `communities` _(list)_: List of communities
+- `aggr` _(Callable, optional (default=sum))_: Function that takes a list of inter-community edge weights and combines them into a single edge weight
+
+**Example Usage:**
+
+```python
+from statistics import mean
+from communities.utilities import intercommunity_matrix
+
+adj_matrix = [...]
+communities = louvain_method(adj_matrix)
+intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
+```
 
 ### laplacian_matrix
 
@@ -210,3 +229,5 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 ### modularity
 
 **`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`**
+
+TODO: Add type annotations
