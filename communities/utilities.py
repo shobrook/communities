@@ -10,16 +10,6 @@ import numpy as np
 ######
 
 
-def binarize_matrix(adj_matrix, threshold):
-    num_nodes = len(adj_matrix)
-    bin_adj_matrix = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
-    for i, neighbors in enumerate(adj_matrix):
-        for j, weight in enumerate(neighbors):
-            bin_adj_matrix[i][j] = 1.0 if abs(weight) >= threshold else 0.0
-
-    return bin_adj_matrix
-
-
 def intercommunity_matrix(adj_matrix, communities, aggr=sum):
     num_nodes = len(communities)
     intercomm_adj_matrix = [[0.0 for _ in range(num_nodes)] for _ in range(num_nodes)]
@@ -37,6 +27,14 @@ def intercommunity_matrix(adj_matrix, communities, aggr=sum):
             intercomm_adj_matrix[j][i] = edge_weight
 
     return intercomm_adj_matrix
+
+
+def laplacian_matrix(adj_matrix):
+    diagonal = adj_matrix.sum(axis=0)
+    D = np.diag(diagonal)
+    L = D - adj_matrix
+
+    return L
 
 
 def modularity_matrix(A):

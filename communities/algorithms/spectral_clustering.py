@@ -11,14 +11,6 @@ import numpy as np
 ##############
 
 
-def laplacian_matrix(adj_matrix):
-    diagonal = adj_matrix.sum(axis=0)
-    D = np.diag(diagonal)
-    L = D - adj_matrix
-
-    return L
-
-
 def eigenvector_matrix(L, n):
     eigvals, eigvecs = np.linalg.eig(L)
     sorted_eigs = sorted(zip(eigvals, eigvecs.T), key=lambda e: e[0])
