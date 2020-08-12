@@ -6,8 +6,8 @@
 - Girvan-Newman algorithm
 - Hierarchical clustering
 - Spectral clustering
-- Karger's algorithm (TODO)
-- Bron-Kerbosch algorithm (TODO)
+- Bron-Kerbosch algorithm
+  <!-- - Minimum k-cut-->
 
 ## Installation
 
@@ -163,7 +163,34 @@ This algorithm is NP-hard.
 from communities.algorithms import spectral_clustering
 
 adj_matrix = [...]
-communities = spectral_clustering(adj_matrix, n=5)
+communities = spectral_clustering(adj_matrix, k=5)
+```
+
+### Bron-Kerbosch algorithm
+
+**`bron_kerbosch(adj_matrix : numpy.ndarray, pivot : bool = False) -> list`**
+
+Implementation of the [Bron-Kerbosch algorithm](https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm) for maximal clique detection. A maximal clique in a graph is a subset of nodes that forms a complete graph and would no longer be complete if any other node was added to the subset. Treating maximal cliques as communities is reasonable, as cliques are the most densely connected groups of nodes in a graph. Because a node can be a member of more than one clique, this algorithm will sometimes identify overlapping communities.
+
+<!--TODO: Given a brief overview of how the algorithm works-->
+<!--TODO: Explain the `pivot` argument-->
+
+If your input graph has less than _3<sup>n/3</sup>_ maximal cliques, then this algorithm runs in _O(3<sup>n/3</sup>)_ time (assuming `pivot=True`).
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+  - Note that this algorithm treats the graph as unweighted
+- `pivot` _(bool)_: If `True`, the pivot variant of the algorithm (described [here](https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm#With_pivoting)) will be used
+  - This will make the algorithm more efficient if your graph has several non-maximal cliques
+
+**Example Usage:**
+
+```python
+from communities.algorithms import bron_kerbosch
+
+adj_matrix = [...]
+communities = bron_kerbosch(adj_matrix, pivot=True)
 ```
 
 ## Utilities
