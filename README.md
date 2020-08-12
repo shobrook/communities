@@ -49,18 +49,6 @@ The output of each algorithm is a list of communities, where each community is a
 
 Implementation of the Louvain method, from _[Fast unfolding of communities in large networks](https://arxiv.org/pdf/0803.0476.pdf)_. This algorithm does a greedy search for the communities that maximize the modularity of the graph. A graph is said to be modular if it has a high density of intra-community edges and a low density of inter-community edges.
 
-<!--Formally, modularity is defined as:
-
-<p align="left"><img src="img/modularity.png" width="275px" /></p>
-
-where
-
-- _A<sub>ij</sub>_ is the weight of the edge between nodes _i_ and _j_
-- _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
-- _m_ is the sum of all of the edge weights in the graph
-- _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
-- _δ_ is the Kronecker delta function (_δ(x, y) = 1_ if _x = y_, _0_ otherwise)-->
-
 Louvain's method runs in _O(nᆞlog<sup>2</sup>n)_ time, where _n_ is the number of nodes in the graph.
 
 **Parameters:**
@@ -211,6 +199,7 @@ Creates an inter-community adjacency matrix. Each node in this matrix represents
 
 ```python
 from statistics import mean
+from communities.algorithms import louvain_method
 from communities.utilities import intercommunity_matrix
 
 adj_matrix = [...]
@@ -222,7 +211,7 @@ intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
 
 **`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
-Computes the graph Laplacian. This matrix is used in the `spectral_clustering` algorithm, and is generally useful for revealing properties of a graph. It is defined as _L = D - A_, where _A_ is the adjacency matrix of the graph, and _D_ is the degree matrix, defined as:
+Computes the [graph Laplacian](https://en.wikipedia.org/wiki/Laplacian_matrix). This matrix is used in the `spectral_clustering` algorithm, and is generally useful for revealing properties of a graph. It is defined as _L = D - A_, where _A_ is the adjacency matrix of the graph, and _D_ is the degree matrix, defined as:
 
 <p align="left"><img src="img/degree_matrix.png" width="235px" /></p>
 
@@ -245,8 +234,38 @@ L = laplacian_matrix(adj_matrix)
 
 **`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
+TODO
+
 ### Modularity
 
 **`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`**
 
-TODO: Add type annotations
+Computes modularity of a partitioned graph. Modularity is defined as:
+
+<p align="left"><img src="img/modularity.png" width="275px" /></p>
+
+where
+
+- _A<sub>ij</sub>_ is the weight of the edge between nodes _i_ and _j_
+- _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
+- _m_ is the sum of all of the edge weights in the graph
+- _c<sub>i</sub>_ and _c<sub>j</sub>_ are the communities of the nodes
+- _δ_ is the Kronecker delta function (_δ(x, y) = 1_ if _x = y_, _0_ otherwise)
+
+**Parameters:**
+
+- `mod_matrix` _(numpy.ndarray)_: Modularity matrix computed from the adjacency matrix representation of your graph
+- `communities` _(list)_: List of (non-overlapping) communities identified in the graph
+
+**Example Usage:**
+
+```python
+from communities.algorithms import louvain_method
+from communities.utilities import modularity_matrix, modularity
+
+adj_matrix = [...]
+communities = louvain_method(adj_matrix)
+
+mod_matrix = modularity_matrix(adj_matrix)
+Q = modularity(mod_matrix, communities)
+```
