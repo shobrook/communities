@@ -195,11 +195,11 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 
 ## Utilities
 
-### intercommunity_matrix
+### Inter-community adjacency matrix
 
 **`intercommunity_matrix(adj_matrix : numpy.ndarray, communities : list, aggr : Callable = sum) -> numpy.ndarray`**
 
-Create an inter-community adjacency matrix. Each node in this matrix represents a community in `communities`, and each edge between nodes _i_ and _j_ is created by aggregating (e.g. summing) the weights of edges between nodes in `communities[i]` and nodes in `communities[j]`.
+Creates an inter-community adjacency matrix. Each node in this matrix represents a community in `communities`, and each edge between nodes _i_ and _j_ is created by aggregating (e.g. summing) the weights of edges between nodes in `communities[i]` and nodes in `communities[j]`.
 
 **Parameters:**
 
@@ -218,7 +218,7 @@ communities = louvain_method(adj_matrix)
 intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
 ```
 
-### laplacian_matrix
+### Graph Laplacian
 
 **`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
@@ -241,11 +241,11 @@ adj_matrix = [...]
 L = laplacian_matrix(adj_matrix)
 ```
 
-### modularity_matrix
+### Modularity matrix
 
 **`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
-### modularity
+### Modularity
 
 **`modularity(mod_matrix : numpy.ndarray, communities : list) -> float`**
 
