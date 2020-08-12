@@ -17,6 +17,8 @@
 $ pip install communities
 ```
 
+<!--The only dependency is numpy.-->
+
 ## Getting Started
 
 Each algorithm expects an adjacency matrix representing an undirected graph, which can be weighted or unweighted. This matrix should be a 2D `numpy` array. Once you have this, simply import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
@@ -79,16 +81,14 @@ communities = louvain_method(adj_matrix)
 
 **`girvan_newman(adj_matrix : numpy.ndarray, n : int = None) -> list`**
 
-Implementation of the Girvan-Newman algorithm, from _[Community structure in social and biological networks](https://www.pnas.org/content/99/12/7821)_. This algorithm iteratively removes edges to create more [connected components](<https://en.wikipedia.org/wiki/Component_(graph_theory)>). Each component is considered a community, and the algorithm stops removing edges when no more gains in modularity can be made. Edges with the highest betweenness centralities are removed. Betweenness centrality is a measure of how many shortest paths between a pair of nodes runs through an edge. Edges with high betweenness centrality are those that lie between many pairs of nodes.
-
-<!--Formally, edge betweenness centrality is defined as:
+Implementation of the Girvan-Newman algorithm, from _[Community structure in social and biological networks](https://www.pnas.org/content/99/12/7821)_. This algorithm iteratively removes edges to create more [connected components](<https://en.wikipedia.org/wiki/Component_(graph_theory)>). Each component is considered a community, and the algorithm stops removing edges when no more gains in modularity can be made. Edges with the highest betweenness centralities (i.e. those that lie between many pairs of nodes) are removed. Formally, edge betweenness centrality is defined as:
 
 <p align="left"><img src="img/edge_betweenness_centrality.png" width="175px" /></p>
 
 where
 
 - _σ(i,j)_ is the number of shortest paths from node _i_ to _j_
-- _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_-->
+- _σ(i,j|e)_ is the number of shortest paths that pass through edge _e_
 
 The Girvan-Newman algorithm runs in _O(m<sup>2</sup>n)_ time, where _m_ is the number of edges in the graph and _n_ is the number of nodes.
 
@@ -221,6 +221,25 @@ intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
 ### laplacian_matrix
 
 **`laplacian_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
+
+Computes the graph Laplacian. This matrix is used in the `spectral_clustering` algorithm, and is generally useful for revealing properties of a graph. It is defined as _L = D - A_, where _A_ is the adjacency matrix of the graph, and _D_ is the degree matrix, defined as:
+
+<p align="left"><img src="img/degree_matrix.png" width="175px" /></p>
+
+where _w<sub>ik</sub>_ is the edge weight between a node _i_ and its neighbor _k_.
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+
+**Example Usage:**
+
+```python
+from communities.utilities import laplacian_matrix
+
+adj_matrix = [...]
+L = laplacian_matrix(adj_matrix)
+```
 
 ### modularity_matrix
 
