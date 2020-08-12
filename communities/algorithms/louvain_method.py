@@ -77,17 +77,6 @@ def initialize_communities(adj_matrix):
 
 
 def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
-    """
-    For each node i, the change in modularity is computed for removing i from
-    its own community and moving it into the community of each neighbor j of i.
-    Once this value, delta_Q, is calculated for all communities i is connected
-    to, i is placed in the community that resulted in the largest delta_Q. If
-    no increase is possible, i remains in its original community. This process
-    is applied repeatedly and sequentially to all nodes until no modularity
-    increase can occur. Once this local maximum of modularity is hit, the first
-    phase has ended. (From: https://en.wikipedia.org/wiki/Louvain_modularity#Algorithm)
-    """
-
     compute_Q = create_Q_computer(adj_matrix)
     best_node_to_comm = node_to_comm.copy()
     num_communities = len(set(best_node_to_comm))
@@ -134,15 +123,6 @@ def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
 
 
 def run_second_phase(node_to_comm, adj_matrix, true_partition):
-    """
-    All nodes in the same community are grouped together and a new network is
-    built where nodes are the communities from the previous phase. Any links
-    between nodes of the same community are now represented by self-loops on
-    the new community node and links from multiple nodes in the same community
-    to a node in a different community are represented by weighted edges
-    between communities. (From: https://en.wikipedia.org/wiki/Louvain_modularity#Algorithm)
-    """
-
     comm_to_nodes = defaultdict(lambda: [])
     for i, comm in enumerate(node_to_comm):
         comm_to_nodes[comm].append(i)

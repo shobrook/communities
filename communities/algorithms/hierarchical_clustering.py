@@ -30,7 +30,7 @@ def cosine_sim(A):
     d = A @ A.T
     norm = (A * A).sum(0, keepdims=True) ** 0.5
     C = d / norm / norm.T
-    
+
     return C
 
 
@@ -45,7 +45,7 @@ def node_similarity_matrix(adj_matrix, metric):
         N = cosine_sim(adj_matrix)
     elif metric == "euclidean":
         N = inverse_euclidean_dist(adj_matrix)
-    
+
     np.fill_diagonal(N, 0.0)
     return N
 
@@ -94,9 +94,6 @@ def merge_communities(communities, C, N, linkage):
 
 def hierarchical_clustering(adj_matrix, metric="cosine", linkage="single",
                             n=None):
-    """
-    """
-
     metric, linkage = metric.lower(), linkage.lower()
 
     communities = [{node} for node in range(len(adj_matrix))]
