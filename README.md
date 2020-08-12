@@ -224,7 +224,7 @@ intercomm_adj_matrix = intercommunity_matrix(adj_matrix, communities, mean)
 
 Computes the graph Laplacian. This matrix is used in the `spectral_clustering` algorithm, and is generally useful for revealing properties of a graph. It is defined as _L = D - A_, where _A_ is the adjacency matrix of the graph, and _D_ is the degree matrix, defined as:
 
-<p align="left"><img src="img/degree_matrix.png" width="175px" /></p>
+<p align="left"><img src="img/degree_matrix.png" width="235px" /></p>
 
 where _w<sub>ik</sub>_ is the edge weight between a node _i_ and its neighbor _k_.
 
