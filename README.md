@@ -1,6 +1,6 @@
 # communities
 
-`communities` is a library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It implements the following algorithms:
+`communities` is a Python library for detecting [community structure](https://en.wikipedia.org/wiki/Community_structure) in graphs. It implements the following algorithms:
 
 - Louvain method
 - Girvan-Newman algorithm
@@ -234,7 +234,19 @@ L = laplacian_matrix(adj_matrix)
 
 **`modularity_matrix(adj_matrix : numpy.ndarray) -> numpy.ndarray`**
 
-TODO
+Computes the modularity matrix for a graph. The modularity matrix is defined as:
+
+<p align="left"><img src="img/modularity.png" width="275px" /></p>
+
+where
+
+- _A<sub>ij</sub>_ is the weight of the edge between nodes _i_ and _j_
+- _k<sub>i</sub>_ and _k<sub>j</sub>_ are the sum of the weights of the edges attached to nodes _i_ and _j_, respectively
+- _m_ is the sum of all of the edge weights in the graph
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
 
 ### Modularity
 
