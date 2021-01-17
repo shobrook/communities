@@ -6,7 +6,9 @@ from collections import defaultdict
 import numpy as np
 
 # Local
-from ..utilities import modularity_matrix, modularity
+# from ..utilities import modularity_matrix, modularity
+from utilities_temp import modularity_matrix, modularity # TEMP
+from visualization_temp import AlgoAnimation # TEMP
 
 
 #########
@@ -40,9 +42,9 @@ def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
     best_node_to_comm = node_to_comm.copy()
     num_communities = len(set(best_node_to_comm))
     is_updated = not (n and num_communities == n)
+    ani_frames = [{"C": best_node_to_comm, "Q": 0.0}]
 
     # QUESTION: Randomize the order of the nodes before iterating?
-
     while is_updated:
         is_updated = False
         for i, neighbors in enumerate(adj_matrix):
@@ -76,42 +78,56 @@ def run_first_phase(node_to_comm, adj_matrix, n, force_merge=False):
                     updated_node_to_comm = candidate_node_to_comm
                     max_delta_Q = delta_Q
 
+                    ani_frames.append({
+                        "C": candidate_node_to_comm,
+                        "Q": candidate_Q
+                    })
+
                 visited_communities.add(neighbor_comm)
+
+            # Set Q for first frame
+            if not i and ani_frames[0]["C"] == best_node_to_comm:
+                ani_frames[0]["Q"] = best_Q
 
             if best_node_to_comm != updated_node_to_comm:
                 best_node_to_comm = updated_node_to_comm
                 is_updated = True
 
-    return best_node_to_comm
+    if ani_frames[-1]["C"] != best_node_to_comm:
+        ani_frames.append({"C": best_node_to_comm, "Q": best_Q})
+
+    return best_node_to_comm, ani_frames
 
 
-def run_second_phase(node_to_comm, adj_matrix, true_partition):
+def run_second_phase(node_to_comm, adj_matrix, true_partition, true_comms):
     comm_to_nodes = defaultdict(lambda: [])
     for i, comm in enumerate(node_to_comm):
         comm_to_nodes[comm].append(i)
-    node_clusters = list(comm_to_nodes.values())
+    comm_to_nodes = list(comm_to_nodes.items())
 
     new_adj_matrix, new_true_partition = [], []
-    for i, cluster in enumerate(node_clusters):
-        true_cluster = {v for u in cluster for v in true_partition[u]}
+    for i, (comm, nodes) in enumerate(comm_to_nodes):
+        true_nodes = {v for u in nodes for v in true_partition[u]}
+        true_comms[i] = true_comms[comm]
+
         row_vec = []
-        for j, neighbor_cluster in enumerate(node_clusters):
+        for j, (_, neighbors) in enumerate(comm_to_nodes):
             if i == j:  # Sum all intra-community weights and add as self-loop
                 edge_weights = (adj_matrix[u][v]
-                                for u, v in get_all_edges(cluster))
+                                for u, v in get_all_edges(nodes))
                 edge_weight = 2 * sum(edge_weights)
             else:
                 edge_weights = (adj_matrix[u][v]
-                                for u in cluster for v in neighbor_cluster)
+                                for u in nodes for v in neighbors)
                 edge_weight = sum(edge_weights)
 
             row_vec.append(edge_weight)
 
-        new_true_partition.append(true_cluster)
+        new_true_partition.append(true_nodes)
         new_adj_matrix.append(row_vec)
 
     # TODO: Use numpy more efficiently
-    return np.array(new_adj_matrix), new_true_partition
+    return np.array(new_adj_matrix), new_true_partition, true_comms
 
 
 ######
@@ -119,14 +135,26 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition):
 ######
 
 
-def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
+def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = False, filename : str = None) -> list:
     optimal_adj_matrix = adj_matrix
     node_to_comm = initialize_node_to_comm(adj_matrix)
     true_partition = [{i} for i in range(len(adj_matrix))]
+    true_comms = {c: c for c in node_to_comm}
 
+    def update_frame(frame, partition, comm_aliases):
+        true_node_to_comm = list(range(len(adj_matrix)))
+        for i, community in enumerate(frame["C"]):
+            for node in partition[i]:
+                true_node_to_comm[node] = comm_aliases[community]
+
+        # TODO: Update Q
+        frame["C"] = true_node_to_comm
+        return frame
+
+    ani_frames = []
     is_optimal = False
     while not is_optimal:
-        optimal_node_to_comm = run_first_phase(
+        optimal_node_to_comm, frames = run_first_phase(
             node_to_comm,
             optimal_adj_matrix,
             n
@@ -134,19 +162,23 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
 
         if optimal_node_to_comm == node_to_comm:
             if not n:
+                ani_frames.extend((update_frame(f, true_partition, true_comms) for f in frames))
                 break
 
-            optimal_node_to_comm = run_first_phase(
+            optimal_node_to_comm, frames = run_first_phase(
                 node_to_comm,
                 optimal_adj_matrix,
                 n,
                 force_merge=True
             )
 
-        optimal_adj_matrix, true_partition = run_second_phase(
+        ani_frames.extend((update_frame(f, true_partition, true_comms) for f in frames))
+
+        optimal_adj_matrix, true_partition, true_comms = run_second_phase(
             optimal_node_to_comm,
             optimal_adj_matrix,
-            true_partition
+            true_partition,
+            true_comms
         )
 
         if n and len(true_partition) == n:
@@ -154,4 +186,21 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
 
         node_to_comm = initialize_node_to_comm(optimal_adj_matrix)
 
+    AlgoAnimation(adj_matrix, ani_frames).show(filename="viz1.gif", dpi=300)
+    # AlgoAnimation(adj_matrix, ani_frames).plot_single_frame(0)
+
     return true_partition
+
+
+if __name__ == "__main__":
+    import networkx as nx
+    G = nx.karate_club_graph()
+    A = np.array(nx.to_numpy_matrix(G))
+    # A = np.array([[0, 1, 1, 0, 0, 0],
+    #               [1, 0, 1, 0, 0, 0],
+    #               [1, 1, 0, 1, 0, 0],
+    #               [0, 0, 1, 0, 1, 1],
+    #               [0, 0, 0, 1, 0, 1],
+    #               [0, 0, 0, 1, 1, 0]])
+
+    louvain_method(A)
