@@ -10,42 +10,15 @@ from matplotlib import cm, colors
 from matplotlib.animation import FuncAnimation
 
 
-def community_layout(g, partition):
-    """
-    Compute the layout for a modular graph.
+#########
+# HELPERS
+#########
 
 
-    Arguments:
-    ----------
-    g -- networkx.Graph or networkx.DiGraph instance
-        graph to plot
-
-    partition -- dict mapping int node -> int community
-        graph partitions
-
-
-    Returns:
-    --------
-    pos -- dict mapping int node -> (float x, float y)
-        node positions
-
-    """
-
-    # TODO: Make scales dynamic
-    pos_communities = _position_communities(g, partition, scale=8., seed=2)
-    pos_nodes = _position_nodes(g, partition, scale=1., seed=2)
-
-    # combine positions
-    pos = dict()
-    for node in g.nodes():
-        pos[node] = pos_communities[node] + pos_nodes[node]
-
-    return pos
-
-def _position_communities(g, partition, **kwargs):
+def _position_communities(G, partition, **kwargs):
     # create a weighted graph, in which each node corresponds to a community,
     # and each edge weight to the number of edges between communities
-    between_community_edges = _find_between_community_edges(g, partition)
+    between_community_edges = _find_between_community_edges(G, partition)
 
     communities = set(partition)
     hypergraph = nx.DiGraph()
@@ -54,19 +27,28 @@ def _position_communities(g, partition, **kwargs):
         hypergraph.add_edge(ci, cj, weight=len(edges))
 
     # find layout for communities
-    pos_communities = nx.spring_layout(hypergraph, **kwargs)
+    if kwargs["pos"]:
+        kwargs["pos"] = {n: kwargs["pos"][n] for n in communities if n in kwargs["pos"]}
+        pos_communities = nx.spring_layout(
+            hypergraph,
+            fixed=list(kwargs["pos"].keys()),
+            **kwargs
+        )
+    else:
+        pos_communities = nx.spring_layout(hypergraph, **kwargs)
 
     # set node positions to position of community
     pos = dict()
     for node, community in enumerate(partition):
         pos[node] = pos_communities[community]
 
-    return pos
+    return pos, pos_communities
 
-def _find_between_community_edges(g, partition):
+
+def _find_between_community_edges(G, partition):
     edges = dict()
 
-    for (ni, nj) in g.edges():
+    for (ni, nj) in G.edges():
         ci = partition[ni]
         cj = partition[nj]
 
@@ -78,7 +60,8 @@ def _find_between_community_edges(g, partition):
 
     return edges
 
-def _position_nodes(g, partition, **kwargs):
+
+def _position_nodes(G, partition, **kwargs):
     """
     Positions nodes within communities.
     """
@@ -89,116 +72,260 @@ def _position_nodes(g, partition, **kwargs):
 
     pos = dict()
     for ci, nodes in communities.items():
-        subgraph = g.subgraph(nodes)
-        pos_subgraph = nx.spring_layout(subgraph, **kwargs)
+        subgraph = G.subgraph(nodes)
+        if kwargs["pos"]:
+            init_pos = {n: kwargs["pos"][n] for n in nodes if n in kwargs["pos"]}
+            pos_subgraph = nx.spring_layout(
+                subgraph,
+                fixed=list(init_pos.keys()),
+                **{**kwargs, **{"pos": init_pos}}
+            )
+        else:
+            pos_subgraph = nx.spring_layout(subgraph, **kwargs)
+
         pos.update(pos_subgraph)
 
     return pos
 
 
+###########
+# UTILITIES
+###########
+
+
+def community_layout(G, partition, community_pos=None, node_pos=None, seed=0):
+    # TODO: Make scales dynamic
+    pos_communities, community_pos = _position_communities(
+        G,
+        partition,
+        scale=8.0,
+        seed=seed,
+        pos=community_pos
+    )
+    pos_nodes = _position_nodes(
+        G,
+        partition,
+        scale=1.0,
+        seed=seed,
+        pos=node_pos
+    )
+
+    pos = dict()
+    for node in G.nodes():
+        pos[node] = pos_communities[node] + pos_nodes[node]
+
+    return pos, community_pos, pos_nodes
+
+
+def create_color_mapper(num_nodes):
+    minima, maxima = 0, num_nodes - 1
+    norm = colors.Normalize(vmin=minima, vmax=maxima, clip=True)
+    return cm.ScalarMappable(norm=norm, cmap=cm.jet)
+
+    # TODO: Make this better.. some of the colors are too similar to each other
+
+
+##########
+# ANIMATOR
+##########
+
+
 class AlgoAnimation(object):
-    def __init__(self, adj_matrix, frames, seed=0):
+    def __init__(self, A, frames, seed=0):
+        self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
 
-        self.fig = plt.figure()
-
-        self.G = nx.from_numpy_matrix(adj_matrix)
-
-        self.source_pos = nx.spring_layout(self.G)
-        self.target_pos = community_layout(self.G, frames[-1]["C"])
-
-        minima, maxima = 0, len(adj_matrix) - 1
-        norm = colors.Normalize(vmin=minima, vmax=maxima, clip=True)
-        self.color_mapper = cm.ScalarMappable(norm=norm, cmap=cm.jet)
-
-        # self.temp_frames = frames # TEMP: For testing purposes
-        self.frames = self._interpolate_transition_frames(frames)
+        self.G = nx.from_numpy_matrix(A)
+        self.frames = self._interpolate_frames(frames)
         self.frame_indices = list(self._generate_frame_indices())
 
-    def _interpolate_transition_frames(self, frames):
-        mean_eucl_dists = []
-        for i in range(len(frames) - 1):
-            source_pos = community_layout(self.G, frames[i]["C"])
-            targ_pos = community_layout(self.G, frames[i + 1]["C"])
+        plt.rcParams["figure.facecolor"] = "black"
+        plt.rcParams["axes.facecolor"] = "black"
 
-            eucl_dists = []
-            for node in range(self.G.number_of_nodes()):
-                eucl_dist = np.linalg.norm(source_pos[node]-targ_pos[node])
-                eucl_dists.append(eucl_dist)
+        self.fig, (self.ax0, self.ax1) = plt.subplots(1, 2, figsize=(12, 6))
 
-            mean_eucl_dists.append(max(eucl_dists))
+        self.x = list(range(len(frames)))
+        self.y = [frame["Q"] for frame in frames]
 
-        D = np.array(mean_eucl_dists)
-        min_n_frames, max_n_frames = 2, 11 # TODO: These numbers are arbitrary; make dynamic
-        norm_dists = (D - D.min()) / D.ptp() * (max_n_frames - min_n_frames) + min_n_frames
+        self.ax1.set_xlim([self.x[0], self.x[-1]])
+        self.ax1.set_ylim([0.0, max(self.y)])
 
-        frames_with_transitions = []
-        for i, num_trans_frames in zip(range(len(frames) - 1), norm_dists):
-            source_pos = community_layout(self.G, frames[i]["C"])
-            targ_pos = community_layout(self.G, frames[i + 1]["C"])
+        for spine in self.ax1.spines.values():
+            spine.set_color((1.0, 1.0, 1.0, 0.75))
 
-            num_trans_frames = int(num_trans_frames) - 1
-            for j in range(num_trans_frames + 1):
-                frame = frames[i].copy()
-                frame["pos"] = {}
-                for n in range(self.G.number_of_nodes()):
-                    frame["pos"][n] = source_pos[n] * (1 - j / (num_trans_frames)) + targ_pos[n] * j / (num_trans_frames)
+        self.ax1.xaxis.label.set_color((1.0, 1.0, 1.0, 0.75))
+        self.ax1.yaxis.label.set_color((1.0, 1.0, 1.0, 0.75))
+        self.ax1.tick_params(axis="y", colors=(1.0, 1.0, 1.0, 0.75))
+        plt.setp(self.ax1.get_xticklabels(), visible=False)
+        plt.tight_layout(3.0)
 
-                if j > 0: # QUESTION: Is this really needed?
-                    frame["C"] = frames[i + 1]["C"]
+        self.color_mapper = create_color_mapper(len(A))
 
-                frames_with_transitions.append(frame)
-
-        last_frame = frames[-1].copy()
-        last_frame["pos"] = community_layout(self.G, frames[-1]["C"])
-
-        return frames_with_transitions + [last_frame]
+    ## Frame Preprocessing ##
 
     def _generate_frame_indices(self):
         num_frames = len(self.frames)
-        for i in range(num_frames):
+
+        # First frame (input graph) should be displayed for 12.5% of the
+        # animation
+        for _ in range(int(0.165 * num_frames)):
+            yield 0
+
+        for i in range(1, num_frames):
             yield i
 
+        # Last frame (partitioned graph) should be displayed for 25% of the
+        # animation
         for _ in range(int(0.33 * num_frames)):
             yield i
 
+    def _compute_trans_sequence(self, frame, next_frame):
+        C = frame["C"]
+        C_next = next_frame["C"]
+
+        src_pos, community_pos, node_pos = community_layout(
+            self.G,
+            C,
+            seed=self.seed
+        )
+        for i in range(len(C)):
+            if C[i] == C_next[i]:
+                continue
+
+            del node_pos[i]
+        mid_pos, _, _ = community_layout(
+            self.G,
+            C_next,
+            community_pos,
+            node_pos,
+            seed=self.seed
+        )
+        targ_pos, _, _ = community_layout(self.G, C_next, seed=self.seed)
+
+        # TODO: Check that this is actually working
+
+        return src_pos, mid_pos, targ_pos
+
+    def _compute_max_euclidean_dist(self, src_pos, targ_pos):
+        eucl_dists = []
+        for node in range(self.G.number_of_nodes()):
+            eucl_dist = np.linalg.norm(targ_pos[node] - src_pos[node])
+            eucl_dists.append(eucl_dist)
+
+        return max(eucl_dists)
+
+    def _compute_num_trans_frames(self, frames):
+        max_trans_dists = []
+        for i in range(len(frames) - 1):
+            src_pos, mid_pos, targ_pos = self._compute_trans_sequence(frames[i], frames[i + 1])
+
+            mid_dist = self._compute_max_euclidean_dist(src_pos, mid_pos)
+            targ_dist = self._compute_max_euclidean_dist(mid_pos, targ_pos)
+
+            max_trans_dists.extend([mid_dist, targ_dist])
+
+        D = np.array(max_trans_dists)
+        n_min, n_max = 2, 11 # TODO: These numbers are arbitrary; make dynamic
+        norm_D = (D - D.min()) / D.ptp() * (n_max - n_min) + n_min
+
+        return [(norm_D[i], norm_D[i + 1]) for i in range(0, len(norm_D), 2)]
+
+    def _create_transition_frames(self, base_frame, src_pos, targ_pos, num_frames, next_C=None):
+        for j in range(num_frames + 1):
+            frame = base_frame.copy()
+            frame["pos"] = {}
+            for n in range(self.G.number_of_nodes()):
+                frame["pos"][n] = src_pos[n] * (1 - j / num_frames) + targ_pos[n] * j / num_frames
+
+            if j > 0 and next_C:
+                frame["C"] = next_C
+
+            yield frame
+
+    def _interpolate_frames(self, frames):
+        T = self._compute_num_trans_frames(frames)
+
+        frames_with_transitions = []
+        for i, T_ij in zip(range(len(frames) - 1), T):
+            T_i, T_j = T_ij
+            src_pos, mid_pos, targ_pos = self._compute_trans_sequence(frames[i], frames[i + 1])
+
+            mid_frames = self._create_transition_frames(
+                {**frames[i], **{"index": i}},
+                src_pos,
+                mid_pos,
+                int(T_i) - 1,
+                frames[i + 1]["C"]
+            )
+            targ_frames = self._create_transition_frames(
+                {**frames[i], **{"C": frames[i + 1]["C"], "index": i}},
+                mid_pos,
+                targ_pos,
+                int(T_j) - 1
+            )
+
+            frames_with_transitions.extend(mid_frames)
+            frames_with_transitions.extend(targ_frames)
+
+        last_frame = frames[-1].copy()
+        last_frame["pos"] = targ_pos
+        last_frame["index"] = len(frames) - 1
+
+        return frames_with_transitions + [last_frame]
+
+    ## Animation ##
+
     def _update(self, i):
-        plt.clf()
-        plt.gca().set_facecolor("black")
+        self.ax0.clear()
+        self.ax1.clear()
 
         C = self.frames[i]["C"]
         Q = self.frames[i]["Q"]
         pos = self.frames[i]["pos"]
+        index = self.frames[i]["index"]
 
-        # TODO: Add "input graph" frame to beginning
-        # TODO: Assign initial communities 1-by-1
+        if not i:
+            self.ax0.set_title("Input Graph", color="white")
+        else:
+            self.ax0.set_title(f"Iteration #{index}", color="white")
+
+        self.ax1.set_title(f"Modularity (Q) = {Q}", color="white")
+        self.ax1.plot(self.x[:index], self.y[:index], color="white")
+
         # TODO: Add patches and update title on last frame
+            # The patches bounding the communities can be made by finding the
+            # positions of the nodes for each community and then drawing a patch
+            # (e.g. matplotlib.patches.Circle) that contains all positions (and
+            # then some).
         # TODO: Make node size dynamic
-        # TODO: Add Q graph and titles
+        # TODO: Fix Q values
         # TODO: Make edge alpha depend on weight
+        # TODO: Blitting!
 
         nodes = nx.draw_networkx_nodes(
             self.G,
             pos=pos,
             node_color=[self.color_mapper.to_rgba(c) for c in C],
-            linewidths=1.0
+            linewidths=1.0,
+            ax=self.ax0
         )
         nodes.set_edgecolor("w")
-        nx.draw_networkx_edges(
+        edges = nx.draw_networkx_edges(
             self.G,
             pos=pos,
-            # edge_color=(0.85, 0.85, 0.85)
-            edge_color=(1.0, 1.0, 1.0, 0.75)
+            edge_color=(1.0, 1.0, 1.0, 0.75),
+            ax=self.ax0
         )
 
     def show(self, duration=15, filename=None, dpi=None):
+        print(len(self.frame_indices))
         ani = FuncAnimation(
             self.fig,
             self._update,
             frames=self.frame_indices,
             init_func=lambda: self._update(0),
-            interval=int(15000 / len(self.frame_indices)),
+            interval=int((duration * 1000) / len(self.frame_indices)),
             repeat=True,
             save_count=len(self.frame_indices)
         )
@@ -206,33 +333,8 @@ class AlgoAnimation(object):
         if not filename:
             plt.show()
         else:
-            savefig_kwargs={'facecolor':'black'}
             ani.save(
                 filename,
-                fps=int(len(self.frame_indices) / 15),
-                dpi=dpi,
-                savefig_kwargs={"facecolor": "black"}
+                fps=int(len(self.frame_indices) / duration),
+                dpi=dpi
             )
-
-    def plot_single_frame(self, i): # TEMP: For testing purposes
-        plt.gca().set_facecolor("black")
-
-        C = self.temp_frames[i]["C"]
-        pos = community_layout(self.G, C)
-
-        print(C)
-
-        nodes = nx.draw_networkx_nodes(
-            self.G,
-            pos=pos,
-            node_color=[self.color_mapper.to_rgba(c) for c in C],
-            linewidths=1.0
-        )
-        nodes.set_edgecolor("w")
-        nx.draw_networkx_edges(
-            self.G,
-            pos=pos,
-            # edge_color=(0.85, 0.85, 0.85)
-            edge_color=(1.0, 1.0, 1.0, 0.75)
-        )
-        plt.show()
