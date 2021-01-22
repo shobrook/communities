@@ -10,16 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 from matplotlib.animation import FuncAnimation
 
-Artists = namedtuple(
-    "Artists",
-    (
-        "network_nodes",
-        "network_edges",
-        "modularity_line"
-        # "title_1",
-        # "title_2"
-    )
-)
+Artists = namedtuple("Artists", ("network_nodes", "network_edges", "modularity_line"))
 
 
 ################
@@ -108,8 +99,8 @@ def _pos_endpoints(G, frames, seed):
         next_partition = frames[i + 1]["C"]
 
         if not prev_pos_clusters and not prev_pos_nodes:
-            prev_pos_clusters = _position_clusters(G, partition, scale=4.0, seed=seed)
-            prev_pos_nodes = _position_nodes(G, partition, scale=0.5, seed=seed)
+            prev_pos_clusters = _position_clusters(G, partition, scale=4.0, seed=seed) # 8.0
+            prev_pos_nodes = _position_nodes(G, partition, scale=0.5, seed=seed) # 1.0
 
         source_pos = cluster_layout(
             G,
@@ -143,13 +134,6 @@ def _pos_endpoints(G, frames, seed):
         prev_pos_nodes = target_pos_nodes
 
         pos_endpoints.append((source_pos, mid_pos, target_pos))
-
-    # init_endpoint = (
-    #     nx.spring_layout(G, scale=4.0, seed=seed),
-    #     nx.spring_layout(G, scale=4.0, seed=seed),
-    #     pos_endpoints[0][0]
-    # )
-    # pos_endpoints.insert(0, init_endpoint)
 
     return pos_endpoints
 
@@ -196,7 +180,7 @@ def interpolate(G, frames, seed):
     trans_lengths = _transition_lengths(frames, pos_endpoints)
 
     interpolated_frames = []
-    _iter_batch = zip(range(len(frames) - 1), pos_endpoints, trans_lengths) # len(frames) - 1
+    _iter_batch = zip(range(len(frames) - 1), pos_endpoints, trans_lengths)
     for i, (source_pos, mid_pos, target_pos), (mid_len, targ_len) in _iter_batch:
         mid_frames = _interpolate_frames(
             G,
@@ -220,7 +204,7 @@ def interpolate(G, frames, seed):
     last_frame["pos"] = target_pos
     last_frame["index"] = len(frames) - 1
 
-    return interpolated_frames + [last_frame]
+    return interpolated_frames + [last_frame, last_frame]
 
 
 ###########
@@ -229,13 +213,12 @@ def interpolate(G, frames, seed):
 
 
 class AlgoAnimation(object):
-    def __init__(self, A, frames, seed=0):
-        self.seed = seed
+    def __init__(self, A, frames, seed=2):
         np.random.seed(seed)
         random.seed(seed)
 
         self.G = nx.from_numpy_matrix(A)
-        self.interpolated_frames = interpolate(self.G, frames, self.seed)
+        self.interpolated_frames = interpolate(self.G, frames, seed)
 
         self.x = list(range(len(frames)))
         self.y = [frame["Q"] for frame in frames]
@@ -269,7 +252,7 @@ class AlgoAnimation(object):
         return xlim, ylim
 
     def init_fig(self):
-        self.ax0.set_title("Input Network", color="white"),
+        self.ax0.set_title("Input Network", color="white")
         self.ax1.set_title("Modularity (Q)", color="white")
 
         self.ax1.set_xlim([0.0, self.x[-1]])
@@ -282,7 +265,7 @@ class AlgoAnimation(object):
         self.ax1.yaxis.label.set_color((1.0, 1.0, 1.0, 0.75))
         self.ax1.tick_params(axis="y", colors=(1.0, 1.0, 1.0, 0.75))
         plt.setp(self.ax1.get_xticklabels(), visible=False)
-        plt.tight_layout(pad=3.0)
+        plt.tight_layout(3.0)
 
         xlim, ylim = self._calculate_axes_limits(200, 1)
         self.ax0.set_xlim(xlim)
@@ -304,8 +287,6 @@ class AlgoAnimation(object):
                 ax=self.ax0
             ),
             self.ax1.plot([], [], color="white")[0]
-            # self.ax0.set_title("Input Graph", color="white"),
-            # self.ax1.set_title("Modularity (Q) = 0.0", color="white")
         )
         self.artists.network_nodes.set_edgecolor("w")
 
@@ -316,14 +297,14 @@ class AlgoAnimation(object):
 
         # First frame (input graph) should be displayed for 12.5% of the
         # animation
-        # for _ in range(int(0.05 * num_frames)):
+        # for _ in range(int(0.165 * num_frames)):
         #     yield 0
 
         for i in range(1, num_frames - 1):
             yield i
 
-        # for _ in range(int(0.15 * num_frames)):
-        #     yield num_frames - 1
+        for _ in range(int(0.15 * num_frames)):
+            yield num_frames - 1
 
     def update(self, i):
         Q = self.interpolated_frames[i]["Q"]
@@ -331,8 +312,8 @@ class AlgoAnimation(object):
         pos = self.interpolated_frames[i]["pos"]
         index = self.interpolated_frames[i]["index"]
 
-        # self.artists.title_1.set_text(f"Iteration #{index}")
-        # self.artists.title_2.set_text(f"Modularity (Q) = {Q}")
+        # self.ax0.set_title(f"Iteration #{index}", color="white")
+        # self.ax1.set_title(f"Modularity (Q) = {Q}", color="white")
 
         offsets = [0.0 for _ in range(len(pos.keys()))]
         for node, coord in pos.items():
