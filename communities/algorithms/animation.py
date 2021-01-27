@@ -11,6 +11,10 @@ from matplotlib import cm, colors
 from matplotlib.animation import FuncAnimation
 
 Artists = namedtuple("Artists", ("network_nodes", "network_edges", "modularity_line"))
+HYPERGRAPH_SCALE = 4.0 # 4
+SUBGRAPH_SCALE = 0.5 # 0.5
+GREY_COLOR = (1.0, 1.0, 1.0, 0.75)
+# TODO: Make scales dynamic
 
 
 ################
@@ -39,9 +43,9 @@ def _position_clusters(G, partition, **kwargs):
 
     inter_cluster_edges = _inter_cluster_edges(G, partition)
     for (c_i, c_j), edges in inter_cluster_edges.items():
-        hypergraph.add_edge(c_i, c_j, weight=len(edges)) # TODO: Try setting weight=1
+        hypergraph.add_edge(c_i, c_j, weight=len(edges))
 
-    pos_clusters = nx.circular_layout(hypergraph, scale=4.0)
+    pos_clusters = nx.circular_layout(hypergraph, scale=HYPERGRAPH_SCALE)
     # pos_clusters = nx.spring_layout(hypergraph, **kwargs)
 
     return pos_clusters
@@ -69,7 +73,7 @@ def _position_nodes(G, partition, **kwargs):
                 }
             )
         else:
-            pos_subgraph = nx.spring_layout(subgraph, **kwargs)
+            pos_subgraph = nx.spring_layout(subgraph, **{**kwargs, **{"scale": SUBGRAPH_SCALE}})
 
         pos.update(pos_subgraph)
 
@@ -95,17 +99,22 @@ def _pos_endpoints(G, frames, seed):
 
     pos_endpoints = []
     for i in range(len(frames) - 1):
-        partition = frames[i]["C"] # TODO: Change 'C' to 'partition'
+        partition = frames[i]["C"]
         next_partition = frames[i + 1]["C"]
 
         if not prev_pos_clusters and not prev_pos_nodes:
-            prev_pos_clusters = _position_clusters(G, partition, scale=4.0, seed=seed) # 8.0
-            prev_pos_nodes = _position_nodes(G, partition, scale=0.5, seed=seed) # 1.0
+            prev_pos_clusters = _position_clusters(G, partition)
+            prev_pos_nodes = _position_nodes(
+                G,
+                partition,
+                seed=seed
+            )
 
+        _prev_pos_clusters = {i: prev_pos_clusters[c_i] for i, c_i in enumerate(partition)}
         source_pos = cluster_layout(
             G,
             prev_pos_nodes,
-            {i: prev_pos_clusters[c_i] for i, c_i in enumerate(partition)}
+            _prev_pos_clusters
         )
 
         init_pos_nodes = {}
@@ -115,15 +124,15 @@ def _pos_endpoints(G, frames, seed):
 
             init_pos_nodes[node] = prev_pos_nodes[node]
 
-        mid_pos_nodes = _position_nodes(G, partition, pos=init_pos_nodes, scale=0.5, seed=seed)
+        mid_pos_nodes = _position_nodes(G, partition, pos=init_pos_nodes, seed=seed)
         mid_pos = cluster_layout(
             G,
             mid_pos_nodes,
-            {i: prev_pos_clusters[c_i] for i, c_i in enumerate(partition)}
+            _prev_pos_clusters
         )
 
-        target_pos_nodes = _position_nodes(G, partition, pos=mid_pos_nodes, fixed=None, scale=0.5, seed=seed)
-        target_pos_clusters = _position_clusters(G, partition, pos={n: coord for n, coord in prev_pos_clusters.items() if n in next_partition}, scale=4.0, seed=seed)
+        target_pos_nodes = _position_nodes(G, partition, pos=mid_pos_nodes, fixed=None, seed=seed)
+        target_pos_clusters = _position_clusters(G, partition)
         target_pos = cluster_layout(
             G,
             target_pos_nodes,
@@ -157,7 +166,7 @@ def _transition_lengths(frames, pos_endpoints):
         trans_distances.extend([mid_distance, target_distance])
 
     D = np.array(trans_distances)
-    n_min, n_max = 2, 11 # TODO: These numbers are arbitrary; make dynamic
+    n_min, n_max = 2, 11 # int(len(frames) / 7)
     norm_D = (D - D.min()) / D.ptp() * (n_max - n_min) + n_min
 
     trans_lengths = ((norm_D[i], norm_D[i + 1]) for i in range(0, len(norm_D), 2))
@@ -242,7 +251,7 @@ class AlgoAnimation(object):
         xy_pixels = self.ax0.transData.transform(np.vstack([xlim, ylim]).T)
         xpix, ypix = xy_pixels.T
 
-        offset = node_size + (node_border_size * 2) + 100
+        offset = 1.5 * (node_size + (node_border_size * 2))
         xlim_pix = [xpix[0] - offset, xpix[1] + offset]
         ylim_pix = [ypix[0] - offset, ypix[1] + offset]
 
@@ -259,15 +268,22 @@ class AlgoAnimation(object):
         self.ax1.set_ylim([0.0, max(self.y)])
 
         for spine in self.ax1.spines.values():
-            spine.set_color((1.0, 1.0, 1.0, 0.75))
+            spine.set_color(GREY_COLOR)
 
-        self.ax1.xaxis.label.set_color((1.0, 1.0, 1.0, 0.75))
-        self.ax1.yaxis.label.set_color((1.0, 1.0, 1.0, 0.75))
-        self.ax1.tick_params(axis="y", colors=(1.0, 1.0, 1.0, 0.75))
+        self.ax1.xaxis.label.set_color(GREY_COLOR)
+        self.ax1.yaxis.label.set_color(GREY_COLOR)
+        self.ax1.tick_params(axis="y", colors=GREY_COLOR)
         plt.setp(self.ax1.get_xticklabels(), visible=False)
         plt.tight_layout(3.0)
 
-        xlim, ylim = self._calculate_axes_limits(200, 1)
+        num_nodes = self.G.number_of_nodes()
+        node_size = 10200 / num_nodes
+        linewidths = 34 / num_nodes
+
+        # TODO: Make edge thickness dynamic
+        # TODO: Make edge alpha depend on weight
+
+        xlim, ylim = self._calculate_axes_limits(node_size, linewidths)
         self.ax0.set_xlim(xlim)
         self.ax0.set_ylim(ylim)
 
@@ -275,15 +291,16 @@ class AlgoAnimation(object):
             nx.draw_networkx_nodes(
                 self.G,
                 pos=self.interpolated_frames[0]["pos"],
-                node_color=self.interpolated_frames[0]["C"], # QUESTION: Should they all be the same color initially?
-                linewidths=1.0,
+                node_color=self.interpolated_frames[-1]["C"], # QUESTION: Should they all be the same color initially?
+                linewidths=linewidths,
                 ax=self.ax0,
-                cmap=cm.jet # TODO: Fix so some colors aren't so similar
+                cmap=cm.jet,
+                node_size=node_size
             ),
             nx.draw_networkx_edges(
                 self.G,
                 pos=self.interpolated_frames[0]["pos"],
-                edge_color=(1.0, 1.0, 1.0, 0.75),
+                edge_color=GREY_COLOR,
                 ax=self.ax0
             ),
             self.ax1.plot([], [], color="white")[0]
@@ -295,9 +312,11 @@ class AlgoAnimation(object):
     def frame_iter(self):
         num_frames = len(self.interpolated_frames)
 
+        # TODO: Make these percentages better
+
         # First frame (input graph) should be displayed for 12.5% of the
         # animation
-        # for _ in range(int(0.165 * num_frames)):
+        # for _ in range(int(0.15 * num_frames)):
         #     yield 0
 
         for i in range(1, num_frames - 1):
@@ -320,7 +339,7 @@ class AlgoAnimation(object):
             offsets[node] = coord
 
         self.artists.network_nodes.set_offsets(offsets)
-        self.artists.network_nodes.set_array(np.array(partition))
+        # self.artists.network_nodes.set_array(np.array(partition))
 
         edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in self.G.edges()])
         self.artists.network_edges.set_verts(edge_pos)
@@ -328,6 +347,8 @@ class AlgoAnimation(object):
         self.artists.modularity_line.set_data(self.x[:index], self.y[:index])
 
         return self.artists
+
+        # TODO: Update title on last frame
 
     def show(self, duration=15, filename=None, dpi=None):
         num_frames = len(list(self.frame_iter()))
