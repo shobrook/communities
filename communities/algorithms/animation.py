@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 from matplotlib.animation import FuncAnimation
 
-Artists = namedtuple("Artists", ("network_nodes", "network_edges", "modularity_line"))
+Artists = namedtuple("Artists", ("network_nodes", "network_edges", "modularity_line", "ax0_title", "ax1_title"))
 HYPERGRAPH_SCALE = 16.0 # 4.0
 SUBGRAPH_SCALE = 4.0 # 0.5
 GREY = (1.0, 1.0, 1.0, 0.75)
@@ -247,8 +247,25 @@ class AlgoAnimation(object):
         return xlim, ylim
 
     def init_fig(self):
-        self.ax0.set_title("Input Network", color="white")
-        self.ax1.set_title("Modularity (Q)", color="white")
+        # text_args = {}
+        ax0_title = self.ax0.text(
+            0.5,
+            1.05,
+            "Input Graph",
+            size=plt.rcParams["axes.titlesize"],
+            ha="center",
+            transform=self.ax0.transAxes,
+            color="white"
+        )
+        ax1_title = self.ax1.text(
+            0.5,
+            1.05,
+            "Modularity (Q)",
+            size=plt.rcParams["axes.titlesize"],
+            ha="center",
+            transform=self.ax1.transAxes,
+            color="white"
+        )
 
         self.ax1.set_xlim([0.0, self.x[-1]])
         self.ax1.set_ylim([0.0, max(self.y)])
@@ -286,7 +303,9 @@ class AlgoAnimation(object):
                 ax=self.ax0,
                 width=linewidths
             ),
-            self.ax1.plot([], [], color="white")[0]
+            self.ax1.plot([], [], color="white")[0],
+            ax0_title,
+            ax1_title
         )
         self.artists.network_nodes.set_edgecolor("w")
 
@@ -298,9 +317,9 @@ class AlgoAnimation(object):
         # TODO: Make these percentages better
 
         # First frame (input graph) should be displayed for 12.5% of the
-        # animation
-        # for _ in range(int(0.165 * num_frames)):
-        #     yield 0
+        # # animation
+        for _ in range(int(0.15 * num_frames)):
+            yield 0
 
         for i in range(1, num_frames - 1):
             yield i
@@ -309,13 +328,16 @@ class AlgoAnimation(object):
             yield num_frames - 1
 
     def update(self, i):
+        if not i:
+            return self.artists
+
         Q = self.interpolated_frames[i]["Q"]
         partition = self.interpolated_frames[i]["C"]
         pos = self.interpolated_frames[i]["pos"]
         index = self.interpolated_frames[i]["index"]
 
-        # self.ax0.set_title(f"Iteration #{index}", color="white")
-        # self.ax1.set_title(f"Modularity (Q) = {Q}", color="white")
+        self.artists.ax0_title.set_text(f"Iteration #{index}")
+        self.artists.ax1_title.set_text(f"Modularity (Q) = {Q}")
 
         offsets = [0.0 for _ in range(len(pos.keys()))]
         for node, coord in pos.items():
@@ -330,8 +352,6 @@ class AlgoAnimation(object):
         self.artists.modularity_line.set_data(self.x[:index], self.y[:index])
 
         return self.artists
-
-        # TODO: Update titles of axes
 
     def show(self, duration=15, filename=None, dpi=None):
         num_frames = len(list(self.frame_iter()))
@@ -350,6 +370,7 @@ class AlgoAnimation(object):
         else:
             anim.save(
                 filename,
-                fps=int(num_frames / duration),
+                # fps=int(num_frames / duration),
+                fps=int(len(self.interpolated_frames) / duration),
                 dpi=dpi
             )
