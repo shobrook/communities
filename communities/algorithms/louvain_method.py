@@ -135,20 +135,23 @@ def run_second_phase(node_to_comm, adj_matrix, true_partition, true_comms):
 ######
 
 
-def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = False, filename : str = None) -> list:
+def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
     optimal_adj_matrix = adj_matrix
     node_to_comm = initialize_node_to_comm(adj_matrix)
     true_partition = [{i} for i in range(len(adj_matrix))]
     true_comms = {c: c for c in node_to_comm}
 
-    def update_frame(frame, partition, comm_aliases):
+    M = modularity_matrix(adj_matrix)
+    def update_frame(frame, partition, comm_aliases, recalculate_Q=True):
         true_node_to_comm = list(range(len(adj_matrix)))
         for i, community in enumerate(frame["C"]):
             for node in partition[i]:
                 true_node_to_comm[node] = comm_aliases[community]
 
-        # TODO: Update Q
         frame["C"] = true_node_to_comm
+        if recalculate_Q:
+            frame["Q"] = modularity(M, invert_node_to_comm(frame["C"]))
+
         return frame
 
     ani_frames = []
@@ -162,7 +165,7 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = Fal
 
         if optimal_node_to_comm == node_to_comm:
             if not n:
-                ani_frames.extend((update_frame(f, true_partition, true_comms) for f in frames))
+                ani_frames.extend((update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames))
                 break
 
             optimal_node_to_comm, frames = run_first_phase(
@@ -172,7 +175,7 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = Fal
                 force_merge=True
             )
 
-        ani_frames.extend((update_frame(f, true_partition, true_comms) for f in frames))
+        ani_frames.extend((update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames))
 
         optimal_adj_matrix, true_partition, true_comms = run_second_phase(
             optimal_node_to_comm,
@@ -186,8 +189,10 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = Fal
 
         node_to_comm = initialize_node_to_comm(optimal_adj_matrix)
 
-    AlgoAnimation(adj_matrix, ani_frames).show(filename="viz1.gif", dpi=300)
-    # AlgoAnimation(adj_matrix, ani_frames).plot_single_frame(0)
+    from animation import AlgoAnimation
+    # AlgoAnimation(adj_matrix, ani_frames).show(duration=15, filename="viz5.gif", dpi=300)
+    # AlgoAnimation(adj_matrix, ani_frames).show()#duration=15, filename="viz6.gif", dpi=100)
+    AlgoAnimation(adj_matrix, ani_frames).show(filename="viz12.gif", dpi=200)
 
     return true_partition
 
@@ -195,6 +200,8 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None, animate : bool = Fal
 if __name__ == "__main__":
     import networkx as nx
     G = nx.karate_club_graph()
+    # G = nx.davis_southern_women_graph()
+    # G = nx.les_miserables_graph()
     A = np.array(nx.to_numpy_matrix(G))
     # A = np.array([[0, 1, 1, 0, 0, 0],
     #               [1, 0, 1, 0, 0, 0],
