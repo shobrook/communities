@@ -148,7 +148,6 @@ def _transition_lengths(frames, pos_endpoints):
         source_pos, mid_pos, target_pos = pos_endpoints[i]
         mid_distance = _max_euclidean_distance(source_pos, mid_pos)
         target_distance = _max_euclidean_distance(mid_pos, target_pos)
-
         trans_distances.extend([mid_distance, target_distance])
 
     D = np.array(trans_distances)
@@ -277,7 +276,7 @@ class AlgoAnimation(object):
         self.ax1.yaxis.label.set_color(GREY)
         self.ax1.tick_params(axis="y", colors=GREY)
         plt.setp(self.ax1.get_xticklabels(), visible=False)
-        plt.tight_layout(3.0)
+        plt.tight_layout(pad=3.0)
 
         num_nodes = self.G.number_of_nodes()
         node_size = 10200 / num_nodes
@@ -291,7 +290,7 @@ class AlgoAnimation(object):
             nx.draw_networkx_nodes(
                 self.G,
                 pos=self.interpolated_frames[0]["pos"],
-                node_color=self.interpolated_frames[-1]["C"], # QUESTION: Should they all be the same color initially?
+                node_color=self.interpolated_frames[0]["C"],
                 linewidths=linewidths,
                 ax=self.ax0,
                 cmap=cm.jet
@@ -314,16 +313,14 @@ class AlgoAnimation(object):
     def frame_iter(self):
         num_frames = len(self.interpolated_frames)
 
-        # TODO: Make these percentages better
-
-        # First frame (input graph) should be displayed for 12.5% of the
-        # # animation
+        # First frame (input graph)
         for _ in range(int(0.15 * num_frames)):
             yield 0
 
         for i in range(1, num_frames - 1):
             yield i
 
+        # Last frame (partitioned graph)
         for _ in range(int(0.15 * num_frames)):
             yield num_frames - 1
 
@@ -344,7 +341,7 @@ class AlgoAnimation(object):
             offsets[node] = coord
 
         self.artists.network_nodes.set_offsets(offsets)
-        # self.artists.network_nodes.set_array(np.array(partition))
+        self.artists.network_nodes.set_array(np.array(partition))
 
         edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in self.G.edges()])
         self.artists.network_edges.set_verts(edge_pos)
