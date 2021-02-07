@@ -9,7 +9,7 @@
 - Bron-Kerbosch algorithm
 <!-- - Minimum k-cut-->
 
-![Demo](http://imgur.com/a/YnAeQNZ.gif)
+<img src="http://imgur.com/a/YnAeQNZ.gif" />
 
 ## Installation
 
