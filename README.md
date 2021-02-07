@@ -7,7 +7,9 @@
 - Hierarchical clustering
 - Spectral clustering
 - Bron-Kerbosch algorithm
-  <!-- - Minimum k-cut-->
+<!-- - Minimum k-cut-->
+
+![Demo](http://imgur.com/a/YnAeQNZ.gif)
 
 ## Installation
 
@@ -17,13 +19,9 @@
 $ pip install communities
 ```
 
-<!--The only dependency is numpy.-->
-
 ## Getting Started
 
 Each algorithm expects an adjacency matrix representing an undirected graph, which can be weighted or unweighted. This matrix should be a 2D `numpy` array. Once you have this, simply import the algorithm you want to use from `communities.algorithms` and plug in the matrix, like so:
-
-<!--TODO: Add picture of graph-->
 
 ```python
 import numpy as np
