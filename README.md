@@ -9,7 +9,8 @@
 - Bron-Kerbosch algorithm
 <!-- - Minimum k-cut-->
 
-<!-- <img src="https://i.imgur.com/wm115sT.mp4" /> -->
+You can also use `communities` to visualize these algorithms. For example, here's a visualization of the Louvain method applied to the [karate club graph](https://en.wikipedia.org/wiki/Zachary%27s_karate_club):
+
 ![Demo](./img/demo.gif)
 
 ## Installation
@@ -34,11 +35,11 @@ adj_matrix = np.array([[0, 1, 1, 0, 0, 0],
                        [0, 0, 1, 0, 1, 1],
                        [0, 0, 0, 1, 0, 1],
                        [0, 0, 0, 1, 1, 0]])
-communities = louvain_method(adj_matrix)
+communities, _ = louvain_method(adj_matrix)
 # >>> [{0, 1, 2}, {3, 4, 5}]
 ```
 
-The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix.
+The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix. Some algorithms, like `louvain_method` and `girvan_newman`, will have two return values: the list of communities and data to plug into a visualization algorithm.
 
 ## Algorithms
 
@@ -61,7 +62,7 @@ Louvain's method runs in _O(nᆞlog<sup>2</sup>n)_ time, where _n_ is the number
 from communities.algorithms import louvain_method
 
 adj_matrix = [...]
-communities = louvain_method(adj_matrix)
+communities, _ = louvain_method(adj_matrix)
 ```
 
 ### Girvan-Newman algorithm
@@ -91,7 +92,7 @@ The Girvan-Newman algorithm runs in _O(m<sup>2</sup>n)_ time, where _m_ is the n
 from communities.algorithms import girvan_newman
 
 adj_matrix = [...]
-communities = girvan_newman(adj_matrix)
+communities, _ = girvan_newman(adj_matrix)
 ```
 
 ### Hierarchical clustering
