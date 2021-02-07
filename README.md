@@ -10,7 +10,7 @@
 <!-- - Minimum k-cut-->
 
 <!-- <img src="https://i.imgur.com/wm115sT.mp4" /> -->
-![Demo](./img/louvain_animation.gif)
+![Demo](./img/demo.gif)
 
 ## Installation
 
