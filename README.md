@@ -39,7 +39,9 @@ communities, _ = louvain_method(adj_matrix)
 # >>> [{0, 1, 2}, {3, 4, 5}]
 ```
 
-The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix. Some algorithms, like `louvain_method` and `girvan_newman`, will have two return values: the list of communities and data to plug into a visualization algorithm.
+The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix.
+
+Some algorithms, like `louvain_method` and `girvan_newman`, will have two return values: the list of communities and data to plug into a visualization algorithm. More on this in the _Visualization_ section.
 
 ## Algorithms
 
@@ -180,6 +182,24 @@ from communities.algorithms import bron_kerbosch
 adj_matrix = [...]
 communities = bron_kerbosch(adj_matrix, pivot=True)
 ```
+
+## Visualization
+
+### Plot communities
+
+**`draw_communities(adj_matrix : numpy.ndarray, communities : list, dark : bool = False)`**
+
+Visualize your graph such that nodes are grouped into their communities. TODO.
+
+### Louvain method animation
+
+**`animate_louvain_method(adj_matrix : numpy.ndarray, frames : list, dark : bool = False)`**
+
+TODO.
+
+### Girvan-Newman animation
+
+TODO.
 
 ## Utilities
 
