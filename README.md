@@ -41,7 +41,7 @@ communities, _ = louvain_method(adj_matrix)
 
 The output of each algorithm is a list of communities, where each community is a set of nodes. Each node is referred to by the index of its row in the adjacency matrix.
 
-Some algorithms, like `louvain_method` and `girvan_newman`, will have two return values: the list of communities and data to plug into a visualization algorithm. More on this in the _Visualization_ section.
+Some algorithms, like `louvain_method` and `girvan_newman`, will return two values: the list of communities and data to plug into a visualization algorithm. More on this in the _Visualization_ section.
 
 ## Algorithms
 
@@ -171,7 +171,7 @@ If your input graph has less than _3<sup>n/3</sup>_ maximal cliques, then this a
 
 - `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
   - Note that this algorithm treats the graph as unweighted
-- `pivot` _(bool)_: If `True`, the pivot variant of the algorithm (described [here](https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm#With_pivoting)) will be used
+- `pivot` _(bool, optional (default=False))_: If `True`, the pivot variant of the algorithm (described [here](https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm#With_pivoting)) will be used
   - This will make the algorithm more efficient if your graph has several non-maximal cliques
 
 **Example Usage:**
@@ -191,15 +191,37 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 
 Visualize your graph such that nodes are grouped into their communities. TODO.
 
-### Louvain method animation
+### Animate the Louvain method
 
-**`animate_louvain_method(adj_matrix : numpy.ndarray, frames : list, dark : bool = False)`**
+**`louvain_animation(adj_matrix : numpy.ndarray, frames : list, dark : bool = False, duration : int = 15, filename : str = None, dpi : int = None, seed : int = 2)`**
 
-TODO.
+Use this to animate the application of the Louvain method to your graph. In this animation, the color of each node represents the community it's assigned to, and nodes in the same community are clustered together. Each step of the animation will show a node changing color (i.e. being assigned to a different community) and being moved to a new cluster, and the corresponding update to the graph's modularity.
 
-### Girvan-Newman animation
+This function returns a `matplotlib.animation.FuncAnimation` object representing the animation.
 
-TODO.
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+- `frames` _(list)_: List of dictionaries representing each iteration of the algorithm
+  - Each dictionary has two keys: `"C"`, which holds a node-to-community lookup table, and `"Q"`, the modularity value of the graph
+  - This list of dictionaries is the second return value of the `louvain_method`
+- `dark` _(bool, optional (default=False))_: If `True`, the animation will have a dark background and color scheme, else it will have a light color scheme
+- `duration` _(int, optional (default=15))_: The desired duration of the animation in seconds
+- `filename` _(str or None, optional (default=None))_: If you want to save the animation as a GIF, `filename` is the path of the file to save it as; set to `None` to display the animation as an interactive plot
+- `dpi` _(int or None, optional (default=None))_: Dots per inch (controls the resolution of the animation)
+- `seed` _(int, optional (default=2))_: Random seed
+
+**Example Usage:**
+
+```python
+from communities.algorithms import louvain_method
+from communities.visualization import louvain_animation
+
+adj_matrix = [...]
+communities, frames = louvain_method(adj_matrix)
+
+louvain_animation(adj_matrix, frames)
+```
 
 ## Utilities
 
