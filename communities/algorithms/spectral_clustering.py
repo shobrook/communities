@@ -36,7 +36,7 @@ def eigenvector_matrix(L, n):
 
 
 def init_communities(num_nodes, k):
-    # Forgy method vs. Random Partition method
+    # QUESTION: Forgy method vs. Random Partition method?
     return [{i} for i in random.sample(range(num_nodes), k)]
 
 
