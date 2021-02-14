@@ -304,7 +304,7 @@ L = laplacian_matrix(adj_matrix)
 
 Computes the modularity matrix for a graph. The modularity matrix is defined as:
 
-<p align="left"><img src="img/modularity_matrix.png" width="215px" /></p>
+<p align="left"><img src="img/modularity_matrix.png" width="200px" /></p>
 
 where
 
