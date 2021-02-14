@@ -9,8 +9,6 @@ import numpy as np
 # Local
 from ..utilities import modularity_matrix, modularity
 
-# TODO: Use numpy helpers when possible
-
 
 ##############
 # MATH HELPERS
