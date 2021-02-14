@@ -213,7 +213,7 @@ communities, frames = louvain_method(adj_matrix)
 draw_communities(adj_matrix, communities)
 ```
 
-<p align="left"><img src="img/draw_communities.png" width="50%"/></p>
+<p align="center"><img src="img/draw_communities.png" width="75%"/></p>
 
 ### Animate the Louvain method
 
@@ -246,6 +246,8 @@ communities, frames = louvain_method(adj_matrix)
 
 louvain_animation(adj_matrix, frames)
 ```
+
+![Demo](./img/demo.gif)
 
 ## Utilities
 
