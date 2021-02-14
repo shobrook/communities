@@ -5,8 +5,6 @@ import numpy as np
 # Local
 from ..utilities import modularity_matrix, modularity
 
-# TODO: Get rid of NetworkX as a dependency
-
 
 #########
 # HELPERS
@@ -41,6 +39,21 @@ def prune_edges(G):
     return G
 
 
+def animation_data(A, P_history, Q_history):
+    num_nodes = len(A)
+    frames = []
+    for P, Q in zip(P_history, Q_history):
+        _P = [0 for _ in range(num_nodes)]
+        for index, partition in enumerate(P):
+            for node in partition:
+                _P[node] = index
+
+        frames.append({"C": _P, "Q": Q})
+
+    return frames
+
+
+
 ######
 # MAIN
 ######
@@ -49,21 +62,26 @@ def prune_edges(G):
 def girvan_newman(adj_matrix : np.ndarray, n : int = None) -> list:
     M = modularity_matrix(adj_matrix)
     G = nx.from_numpy_matrix(adj_matrix)
+    num_nodes = G.number_of_nodes()
     G.remove_edges_from(nx.selfloop_edges(G))
-    communities = list(nx.connected_components(G))
 
-    best_Q = -0.5
+    best_P = list(nx.connected_components(G)) # Partition
+    best_Q = modularity(M, best_P)
+    P_history = [best_P]
+    Q_history = [best_Q]
     while True:
-        Q = 0.0
-        if not n:
-            Q = modularity(M, communities)
-            if Q <= best_Q:
-                break
-        elif n and len(communities) == n:
-            break
+        last_P = P_history[-1]
+        if not n and len(last_P) == num_nodes:
+            return best_P, animation_data(adj_matrix, P_history, Q_history) # TODO: Only up to index of best_P
+        elif n and len(last_P) == n:
+            return last_P, animation_data(adj_matrix, P_history, Q_history)
 
         G = prune_edges(G)
-        communities = list(nx.connected_components(G))
-        best_Q = Q
+        P = list(nx.connected_components(G))
+        Q = modularity(M, P)
+        if Q >= best_Q:
+            best_Q = Q
+            best_P = P
 
-    return communities
+        P_history.append(P)
+        Q_history.append(Q)
