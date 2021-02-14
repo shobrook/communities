@@ -6,9 +6,7 @@ from collections import defaultdict
 import numpy as np
 
 # Local
-# from ..utilities import modularity_matrix, modularity
-from utilities_temp import modularity_matrix, modularity # TEMP
-from visualization_temp import AlgoAnimation # TEMP
+from ..utilities import modularity_matrix, modularity
 
 
 #########
@@ -142,7 +140,7 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
     true_comms = {c: c for c in node_to_comm}
 
     M = modularity_matrix(adj_matrix)
-    def update_frame(frame, partition, comm_aliases, recalculate_Q=True):
+    def update_frame(frame, partition, comm_aliases, recalculate_Q):
         true_node_to_comm = list(range(len(adj_matrix)))
         for i, community in enumerate(frame["C"]):
             for node in partition[i]:
@@ -165,7 +163,8 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
 
         if optimal_node_to_comm == node_to_comm:
             if not n:
-                ani_frames.extend((update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames))
+                frames = (update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames)
+                ani_frames.extend(frames)
                 break
 
             optimal_node_to_comm, frames = run_first_phase(
@@ -175,7 +174,8 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
                 force_merge=True
             )
 
-        ani_frames.extend((update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames))
+        frames = (update_frame(f, true_partition, true_comms, bool(ani_frames)) for f in frames)
+        ani_frames.extend(frames)
 
         optimal_adj_matrix, true_partition, true_comms = run_second_phase(
             optimal_node_to_comm,
@@ -189,25 +189,4 @@ def louvain_method(adj_matrix : np.ndarray, n : int = None) -> list:
 
         node_to_comm = initialize_node_to_comm(optimal_adj_matrix)
 
-    from animation import AlgoAnimation
-    # AlgoAnimation(adj_matrix, ani_frames).show(duration=15, filename="viz5.gif", dpi=300)
-    # AlgoAnimation(adj_matrix, ani_frames).show()#duration=15, filename="viz6.gif", dpi=100)
-    AlgoAnimation(adj_matrix, ani_frames).show(filename="viz12.gif", dpi=200)
-
-    return true_partition
-
-
-if __name__ == "__main__":
-    import networkx as nx
-    G = nx.karate_club_graph()
-    # G = nx.davis_southern_women_graph()
-    # G = nx.les_miserables_graph()
-    A = np.array(nx.to_numpy_matrix(G))
-    # A = np.array([[0, 1, 1, 0, 0, 0],
-    #               [1, 0, 1, 0, 0, 0],
-    #               [1, 1, 0, 1, 0, 0],
-    #               [0, 0, 1, 0, 1, 1],
-    #               [0, 0, 0, 1, 0, 1],
-    #               [0, 0, 0, 1, 1, 0]])
-
-    louvain_method(A)
+    return true_partition, ani_frames
