@@ -187,9 +187,33 @@ communities = bron_kerbosch(adj_matrix, pivot=True)
 
 ### Plot communities
 
-**`draw_communities(adj_matrix : numpy.ndarray, communities : list, dark : bool = False)`**
+**`draw_communities(adj_matrix : numpy.ndarray, communities : list, dark : bool = False, filename : str = None, seed : int = 1)`**
 
-Visualize your graph such that nodes are grouped into their communities. TODO.
+Visualize your graph such that nodes are grouped into their communities and color-coded.
+
+Returns a `matplotlib.axes.Axes` representing the plot.
+
+**Parameters:**
+
+- `adj_matrix` _(numpy.ndarray)_: Adjacency matrix representation of your graph
+- `dark` _(bool, optional (default=False))_: If `True`, the plot will have a dark background and color scheme, else it will have a light color scheme
+- `filename` _(str or None, optional (default=None))_: If you want to save the plot as a PNG, `filename` is the path of the file to save it as; set to `None` to display the plot interactively
+- `dpi` _(int or None, optional (default=None))_: Dots per inch (controls the resolution of the image)
+- `seed` _(int, optional (default=2))_: Random seed
+
+**Example Usage:**
+
+```python
+from communities.algorithms import louvain_method
+from communities.visualization import draw_communities
+
+adj_matrix = [...]
+communities, frames = louvain_method(adj_matrix)
+
+draw_communities(adj_matrix, communities)
+```
+
+<p align="left"><img src="img/draw_communities.png" width="50%"/></p>
 
 ### Animate the Louvain method
 
