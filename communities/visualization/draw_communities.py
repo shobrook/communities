@@ -11,7 +11,7 @@ from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from matplotlib import cm
 from scipy.interpolate import splprep, splev
-from scipy.spatial import ConvexHull, Delaunay
+from scipy.spatial import ConvexHull
 
 
 ##################
@@ -147,8 +147,8 @@ def _scale_convex_hull(vertices, offset):
 
 
 def _community_patch(vertices):
-    V = _scale_convex_hull(vertices, 1) # TODO: Make offset dynamic
-    tck, u = splprep(V.T, u=None, s=0.0, per=1)
+    vertices = _scale_convex_hull(vertices, 1) # TODO: Make offset dynamic
+    tck, u = splprep(vertices.T, u=None, s=0.0, per=1)
     u_new = np.linspace(u.min(), u.max(), 1000)
     x_new, y_new = splev(u_new, tck, der=0)
 
