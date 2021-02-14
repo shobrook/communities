@@ -14,17 +14,17 @@ with open("README.md", encoding="utf-8") as file:
 
 setup(
     name="communities",
-    description="Library of algorithms for detecting communities in graphs",
+    description="Library for detecting and visualizing community structure in graphs",
     long_description=readme,
     long_description_content_type="text/markdown",
-    version="v2.1.0",
-    packages=["communities", "communities.algorithms"],
+    version="v3.0.0",
+    packages=["communities", "communities.algorithms", "communities.visualization"],
     python_requires=">=3",
     url="https://github.com/shobrook/communities",
     author="shobrook",
     author_email="shobrookj@gmail.com",
     # classifiers=[],
-    install_requires=["networkx"],
-    keywords=["graph", "louvain", "community", "clustering", "detection", "girvan-newman", "hierarchical"],
+    install_requires=["networkx", "numpy", "matplotlib", "scipy"],
+    keywords=["graph", "louvain", "community", "clustering", "detection", "girvan-newman", "hierarchical", "visualization"],
     license="MIT"
 )
