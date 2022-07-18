@@ -349,3 +349,7 @@ communities = louvain_method(adj_matrix)
 mod_matrix = modularity_matrix(adj_matrix)
 Q = modularity(mod_matrix, communities)
 ```
+
+# Authors
+
+`communities` was created by Jonathan Shobrook with the help of [Paul C. Bogdan](https://github.com/paulcbogdan/) as part of our research in the [Dolcos Lab](https://dolcoslab.beckman.illinois.edu/) at the Beckman Institute for Advanced Science and Technology.
