@@ -14,8 +14,8 @@ You can also use `communities` to visualize these algorithms. For example, here'
 ![Demo](./img/demo.gif)
 
 **Cited in:**
-[
-An Interpretable Station Delay Prediction Model Based on Graph Community Neural Network and Time-Series Fuzzy Decision Tree](https://ieeexplore.ieee.org/document/9792625)
+
+[An Interpretable Station Delay Prediction Model Based on Graph Community Neural Network and Time-Series Fuzzy Decision Tree](https://ieeexplore.ieee.org/document/9792625)
 
 [SITUATEDGEN: Incorporating Geographical and Temporal Contexts into Generative Commonsense Reasoning](https://arxiv.org/pdf/2306.12552.pdf)
 
