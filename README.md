@@ -13,7 +13,7 @@ You can also use `communities` to visualize these algorithms. For example, here'
 
 ![Demo](./img/demo.gif)
 
-**Cited in:**
+#### Cited in
 
 [An Interpretable Station Delay Prediction Model Based on Graph Community Neural Network and Time-Series Fuzzy Decision Tree](https://ieeexplore.ieee.org/document/9792625)
 
