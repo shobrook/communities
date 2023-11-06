@@ -216,7 +216,7 @@ class Animation(object):
         np.random.seed(seed)
         random.seed(seed)
 
-        self.G = nx.from_numpy_matrix(A)
+        self.G = nx.from_numpy_array(A)
         self.interpolated_frames = interpolate(self.G, frames, seed)
 
         self.x = list(range(len(frames)))
