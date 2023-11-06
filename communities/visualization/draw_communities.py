@@ -185,7 +185,7 @@ def draw_communities(adj_matrix, communities, dark=False, filename=None, dpi=Non
     np.random.seed(seed)
     random.seed(seed)
 
-    G = nx.from_numpy_matrix(adj_matrix)
+    G = nx.from_numpy_array(adj_matrix)
     partition = [0 for _ in range(G.number_of_nodes())]
     for c_i, nodes in enumerate(communities):
         for i in nodes:
