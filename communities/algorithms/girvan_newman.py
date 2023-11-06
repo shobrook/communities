@@ -61,7 +61,7 @@ def animation_data(A, P_history, Q_history):
 
 def girvan_newman(adj_matrix : np.ndarray, n : int = None) -> list:
     M = modularity_matrix(adj_matrix)
-    G = nx.from_numpy_matrix(adj_matrix)
+    G = nx.from_numpy_array(adj_matrix)
     num_nodes = G.number_of_nodes()
     G.remove_edges_from(nx.selfloop_edges(G))
 
